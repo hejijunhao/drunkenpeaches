@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getClubContext } from "@/lib/club-context";
+import { PageHeader } from "@/components/page-header";
 import { SettingsForm } from "./settings-form";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -15,13 +16,11 @@ export default async function SettingsPage({
   if (!ctx.isCommittee) notFound();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Club settings</h1>
-        <p className="text-sm text-stone-500">
-          Club URL: <code className="text-xs">/c/{ctx.club.slug}</code>
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Club settings"
+        description="Identity, sign-up rules, and guest policy for your club."
+      />
       <SettingsForm slug={slug} club={ctx.club} />
     </div>
   );

@@ -1,16 +1,31 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import {
+  CalendarDaysIcon,
+  CalendarOffIcon,
+  ClipboardCheckIcon,
+  MapPinIcon,
+  PlusIcon,
+  UsersIcon,
+} from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import { fmtDate, fmtTime } from "@/lib/format";
 import { seatsTaken, type Lunch, type Signup } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { SeatMeter } from "@/components/seat-meter";
 import { StatusBadge } from "@/components/status-badge";
+import { LunchCard } from "@/components/lunch-card";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
 type LunchRow = Lunch & { venues: { name: string } | null };
+
+const waitlistedCount = (signups: Signup[]) =>
+  signups.filter((s) => s.status === "waitlisted").length;
 
 export default async function DashboardPage({
   params,
@@ -34,18 +49,30 @@ export default async function DashboardPage({
   const lunches = (upcoming ?? []) as LunchRow[];
   const next = lunches.find((l) => l.status === "released");
 
-  let nextSignups: Signup[] = [];
-  let mySignup: Signup | undefined;
-  if (next) {
-    const { data: signups } = await supabase
+  // One query for sign-ups across every visible upcoming lunch → seat meters.
+  const signupsByLunch = new Map<string, Signup[]>();
+  if (lunches.length) {
+    const { data: allSignups } = await supabase
       .from("signups")
       .select("*")
-      .eq("lunch_id", next.id);
-    nextSignups = (signups ?? []) as Signup[];
-    mySignup = nextSignups.find(
-      (s) => s.membership_id === ctx.membership.id && s.status !== "cancelled"
-    );
+      .in(
+        "lunch_id",
+        lunches.map((l) => l.id)
+      );
+    for (const s of (allSignups ?? []) as Signup[]) {
+      const arr = signupsByLunch.get(s.lunch_id) ?? [];
+      arr.push(s);
+      signupsByLunch.set(s.lunch_id, arr);
+    }
   }
+
+  const nextSignups = next ? (signupsByLunch.get(next.id) ?? []) : [];
+  const mySignup = next
+    ? nextSignups.find(
+        (s) =>
+          s.membership_id === ctx.membership.id && s.status !== "cancelled"
+      )
+    : undefined;
 
   // Committee extras
   let pipelineCount = 0;
@@ -67,117 +94,148 @@ export default async function DashboardPage({
     memberCount = mc ?? 0;
   }
 
+  const comingUp = lunches.filter((l) => l.id !== next?.id);
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Hello, {ctx.membership.full_name.split(" ")[0] || "there"}
-          </h1>
-          <p className="text-sm text-stone-500">{ctx.club.name}</p>
-        </div>
-        {ctx.isCommittee && (
+      <PageHeader
+        title={`Hello, ${ctx.membership.full_name.split(" ")[0] || "there"}`}
+        description={ctx.club.name}
+      >
+        {ctx.isCommittee ? (
           <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
+            <PlusIcon />
             New lunch
           </Button>
-        )}
-      </div>
+        ) : null}
+      </PageHeader>
 
+      {/* Next-lunch hero */}
       {next ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-3">
-              Next lunch: {next.title}
-              <StatusBadge status={next.status} />
-              {mySignup && <StatusBadge status={mySignup.status} />}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-stone-600">
-              {fmtDate(next.lunch_date)} at {fmtTime(next.start_time)}
-              {next.venues ? ` — ${next.venues.name}` : ""}
-            </p>
-            <p className="text-sm text-stone-500">
-              {seatsTaken(nextSignups)} of {next.capacity} seats taken
-              {nextSignups.filter((s) => s.status === "waitlisted").length > 0 &&
-                ` · ${nextSignups.filter((s) => s.status === "waitlisted").length} waitlisted`}
-            </p>
-            <Button
-              variant={mySignup ? "outline" : "default"}
-              render={<Link href={`/c/${slug}/lunches/${next.id}`} />}
-            >
-              {mySignup ? "View / manage my sign-up" : "View & sign up"}
-            </Button>
-          </CardContent>
+        <Card className="gap-0 p-6 sm:p-8">
+          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            Next lunch
+          </p>
+          <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-h2 text-foreground">{next.title}</h2>
+                <StatusBadge status={next.status} />
+                {mySignup ? <StatusBadge status={mySignup.status} /> : null}
+              </div>
+              <div className="space-y-1 text-sm text-muted-foreground">
+                <p className="flex items-center gap-1.5">
+                  <CalendarDaysIcon className="size-4 shrink-0" />
+                  {fmtDate(next.lunch_date)} at {fmtTime(next.start_time)}
+                </p>
+                {next.venues ? (
+                  <p className="flex items-center gap-1.5">
+                    <MapPinIcon className="size-4 shrink-0" />
+                    {next.venues.name}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+            <div className="space-y-4 md:w-64">
+              <SeatMeter
+                taken={seatsTaken(nextSignups)}
+                capacity={next.capacity}
+                waitlisted={waitlistedCount(nextSignups)}
+              />
+              <Button
+                className="w-full"
+                variant={mySignup ? "outline" : "default"}
+                render={<Link href={`/c/${slug}/lunches/${next.id}`} />}
+              >
+                {mySignup ? "View / manage my sign-up" : "View & sign up"}
+              </Button>
+            </div>
+          </div>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="py-10 text-center text-stone-500">
-            No upcoming lunches yet.
-            {ctx.isCommittee && (
-              <>
-                {" "}
-                <Link
-                  href={`/c/${slug}/lunches/new`}
-                  className="underline underline-offset-4"
-                >
-                  Create one
-                </Link>
-                .
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={CalendarOffIcon}
+          title="No upcoming lunches yet"
+          description={
+            ctx.isCommittee
+              ? "Create the first lunch and release it to members when the booking is confirmed."
+              : "When the committee releases the next lunch, it'll appear here."
+          }
+          action={
+            ctx.isCommittee ? (
+              <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
+                <PlusIcon />
+                New lunch
+              </Button>
+            ) : undefined
+          }
+        />
       )}
 
-      {lunches.length > (next ? 1 : 0) && (
-        <section>
-          <h2 className="text-lg font-medium mb-3">Coming up</h2>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {lunches
-              .filter((l) => l.id !== next?.id)
-              .map((l) => (
-                <Link key={l.id} href={`/c/${slug}/lunches/${l.id}`}>
-                  <Card className="hover:shadow-sm transition-shadow h-full">
-                    <CardContent className="pt-6 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">{l.title}</span>
-                        <StatusBadge status={l.status} />
-                      </div>
-                      <p className="text-sm text-stone-500">
-                        {fmtDate(l.lunch_date)}
-                        {l.venues ? ` · ${l.venues.name}` : ""}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+      {/* Coming up */}
+      {comingUp.length > 0 ? (
+        <section className="space-y-3">
+          <h2 className="text-h2 text-foreground">Coming up</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {comingUp.map((l) => {
+              const s = signupsByLunch.get(l.id) ?? [];
+              return (
+                <LunchCard
+                  key={l.id}
+                  href={`/c/${slug}/lunches/${l.id}`}
+                  title={l.title}
+                  status={l.status}
+                  date={l.lunch_date}
+                  venueName={l.venues?.name}
+                  taken={seatsTaken(s)}
+                  capacity={l.capacity}
+                  waitlisted={waitlistedCount(s)}
+                />
+              );
+            })}
           </div>
         </section>
-      )}
+      ) : null}
 
-      {ctx.isCommittee && (
-        <section className="grid gap-3 sm:grid-cols-2">
-          <Link href={`/c/${slug}/venues`}>
-            <Card className="hover:shadow-sm transition-shadow">
-              <CardContent className="pt-6">
-                <p className="text-2xl font-semibold">{pipelineCount}</p>
-                <p className="text-sm text-stone-500">
-                  venues in the pipeline (candidate / tasting)
-                </p>
-              </CardContent>
+      {/* Committee stat tiles */}
+      {ctx.isCommittee ? (
+        <section className="grid gap-4 sm:grid-cols-2">
+          <Link href={`/c/${slug}/venues`} className="block">
+            <Card hover className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <ClipboardCheckIcon className="size-5" />
+                </div>
+                <div>
+                  <p className="font-heading text-2xl leading-none font-medium">
+                    {pipelineCount}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    venues in the pipeline
+                  </p>
+                </div>
+              </div>
             </Card>
           </Link>
-          <Link href={`/c/${slug}/members`}>
-            <Card className="hover:shadow-sm transition-shadow">
-              <CardContent className="pt-6">
-                <p className="text-2xl font-semibold">{memberCount}</p>
-                <p className="text-sm text-stone-500">active members</p>
-              </CardContent>
+          <Link href={`/c/${slug}/members`} className="block">
+            <Card hover className="p-5">
+              <div className="flex items-center gap-4">
+                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  <UsersIcon className="size-5" />
+                </div>
+                <div>
+                  <p className="font-heading text-2xl leading-none font-medium">
+                    {memberCount}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    active members
+                  </p>
+                </div>
+              </div>
             </Card>
           </Link>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

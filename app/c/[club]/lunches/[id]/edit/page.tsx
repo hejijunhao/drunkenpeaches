@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import { LunchForm } from "../../lunch-form";
+import { PageHeader } from "@/components/page-header";
 import type { Lunch, Venue } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Edit lunch" };
@@ -35,14 +36,11 @@ export default async function EditLunchPage({
   if (!lunch) notFound();
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Edit lunch</h1>
-        <p className="text-sm text-stone-500">
-          Attendees are notified if you change the date, time or venue of a
-          released lunch.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Edit lunch"
+        description="Attendees are notified if you change the date, time or venue of a released lunch."
+      />
       <LunchForm
         slug={slug}
         lunch={lunch as Lunch}

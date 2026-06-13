@@ -26,7 +26,7 @@ export function SetPasswordForm({ defaultName }: { defaultName: string }) {
           minLength={8}
           required
         />
-        <p className="text-xs text-stone-500">At least 8 characters.</p>
+        <p className="text-xs text-muted-foreground">At least 8 characters.</p>
       </div>
       <div className="space-y-2">
         <Label htmlFor="fullName">Full name</Label>
@@ -50,13 +50,13 @@ export function SetPasswordForm({ defaultName }: { defaultName: string }) {
           placeholder="e.g. no shellfish, vegetarian…"
           rows={3}
         />
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-muted-foreground">
           It&apos;s a dining club — the committee shares these with the
           restaurant.
         </p>
       </div>
       <FormError message={state.error} />
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" loading={pending}>
         {pending ? "Saving…" : "Complete my profile"}
       </Button>
     </form>

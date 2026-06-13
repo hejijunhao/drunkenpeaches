@@ -1,12 +1,21 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
+import { PlusIcon } from "lucide-react";
 import { createWineAction } from "@/app/actions/wine";
 import type { FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FormError } from "@/components/form-error";
+import { useSuccessToast } from "@/lib/use-success-toast";
 
 export function WineForm({ slug }: { slug: string }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
@@ -14,41 +23,50 @@ export function WineForm({ slug }: { slug: string }) {
     {}
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const submitted = useRef(false);
+
+  useSuccessToast(pending, state.error, "Wine added to the catalogue");
 
   useEffect(() => {
-    if (state && !state.error) formRef.current?.reset();
-  }, [state]);
+    if (submitted.current && !pending && !state.error) {
+      formRef.current?.reset();
+    }
+    if (pending) submitted.current = true;
+  }, [pending, state]);
 
   return (
-    <form ref={formRef} action={formAction} className="flex flex-wrap items-end gap-3">
-      <div className="space-y-2 flex-1 min-w-48">
+    <form ref={formRef} action={formAction} className="grid gap-4 sm:grid-cols-6">
+      <div className="space-y-2 sm:col-span-3">
         <Label htmlFor="name">Wine</Label>
         <Input id="name" name="name" placeholder="Ch. Léoville-Barton" required />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 sm:col-span-1">
         <Label htmlFor="vintage">Vintage</Label>
-        <Input id="vintage" name="vintage" placeholder="2016" className="w-24" />
+        <Input id="vintage" name="vintage" placeholder="2016" />
       </div>
-      <div className="space-y-2">
+      <div className="space-y-2 sm:col-span-2">
         <Label htmlFor="source">Source</Label>
-        <select
-          id="source"
-          name="source"
-          defaultValue="cellar"
-          className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-        >
-          <option value="cellar">Club cellar</option>
-          <option value="restaurant">Restaurant list</option>
-        </select>
+        <Select name="source" defaultValue="cellar">
+          <SelectTrigger id="source" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="cellar">Club cellar</SelectItem>
+            <SelectItem value="restaurant">Restaurant list</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-      <div className="space-y-2 flex-1 min-w-48">
+      <div className="space-y-2 sm:col-span-5">
         <Label htmlFor="notes">Notes</Label>
         <Input id="notes" name="notes" placeholder="Drinking window, style…" />
       </div>
-      <Button type="submit" disabled={pending}>
-        {pending ? "Adding…" : "Add wine"}
-      </Button>
-      <div className="basis-full">
+      <div className="flex items-end sm:col-span-1">
+        <Button type="submit" loading={pending} className="w-full">
+          <PlusIcon />
+          Add
+        </Button>
+      </div>
+      <div className="sm:col-span-6">
         <FormError message={state.error} />
       </div>
     </form>

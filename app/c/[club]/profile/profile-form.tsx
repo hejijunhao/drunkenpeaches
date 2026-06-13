@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError } from "@/components/form-error";
+import { useSuccessToast } from "@/lib/use-success-toast";
 
 export function ProfileForm({
   slug,
@@ -21,10 +22,11 @@ export function ProfileForm({
     updateMyProfileAction.bind(null, slug),
     {}
   );
-  const saved = !!state.success;
+
+  useSuccessToast(pending, state.error, "Profile saved");
 
   return (
-    <form action={formAction} className="space-y-5 max-w-xl">
+    <form action={formAction} className="max-w-2xl space-y-6">
       <div className="space-y-2">
         <Label htmlFor="fullName">Name</Label>
         <Input
@@ -36,7 +38,9 @@ export function ProfileForm({
       </div>
       <div className="space-y-2">
         <Label>Email</Label>
-        <Input value={membership.email} disabled />
+        <div className="flex h-9 items-center rounded-lg border border-border bg-muted/50 px-3 text-sm text-muted-foreground">
+          {membership.email}
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="phone">Phone</Label>
@@ -51,17 +55,14 @@ export function ProfileForm({
           defaultValue={membership.dietary_notes ?? ""}
           placeholder="e.g. no shellfish, vegetarian…"
         />
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-muted-foreground">
           The committee shares these with the restaurant before each lunch.
         </p>
       </div>
       <FormError message={state.error} />
-      <div className="flex items-center gap-3">
-        <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : "Save profile"}
-        </Button>
-        {saved && <span className="text-sm text-emerald-700">Saved ✓</span>}
-      </div>
+      <Button type="submit" loading={pending}>
+        Save profile
+      </Button>
     </form>
   );
 }

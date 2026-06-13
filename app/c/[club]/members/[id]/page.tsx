@@ -2,10 +2,15 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
-import { fmtDateShort } from "@/lib/format";
+import { fmtDateShort, initials } from "@/lib/format";
 import type { Membership } from "@/lib/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
+import {
+  AttendanceHistory,
+  type AttendanceItem,
+} from "@/components/attendance-history";
 import { MemberEditForm } from "./member-edit-form";
 
 export const metadata: Metadata = { title: "Edit member" };
@@ -20,25 +25,27 @@ export default async function MemberDetailPage({
   if (!ctx.isCommittee) notFound();
 
   const supabase = await createClient();
-  const { data: member } = await supabase
+  const { data: memberData } = await supabase
     .from("memberships")
     .select("*")
     .eq("id", id)
     .eq("club_id", ctx.club.id)
     .single();
-  if (!member) notFound();
+  if (!memberData) notFound();
+  const member = memberData as Membership;
 
-  // Attendance history: completed lunches this member was confirmed for.
   const { data: history } = await supabase
     .from("signups")
-    .select("id, status, attended, guest_count, lunches(id, title, lunch_date, status)")
+    .select(
+      "id, status, attended, guest_count, lunches(id, title, lunch_date, status)"
+    )
     .eq("membership_id", id)
     .order("created_at", { ascending: false })
     .limit(50);
 
-  const attendance = (history ?? [])
+  const attendance: AttendanceItem[] = (history ?? [])
     .map((h) => ({
-      ...h,
+      raw: h,
       lunch: h.lunches as unknown as {
         id: string;
         title: string;
@@ -46,54 +53,50 @@ export default async function MemberDetailPage({
         status: string;
       } | null,
     }))
-    .filter((h) => h.lunch && h.status !== "cancelled");
+    .filter((h) => h.lunch && h.raw.status !== "cancelled")
+    .map((h) => ({
+      id: h.raw.id,
+      date: h.lunch!.lunch_date,
+      title: h.lunch!.title,
+      status: h.raw.status,
+      attended: h.raw.attended,
+    }));
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-3">
-          {(member as Membership).full_name || (member as Membership).email}
-          <StatusBadge status={(member as Membership).status} />
-        </h1>
-        <p className="text-sm text-stone-500">
-          Member since {fmtDateShort((member as Membership).joined_on)}
-        </p>
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar size="lg">
+          <AvatarFallback className="bg-primary/10 text-primary">
+            {initials(member.full_name || member.email)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="space-y-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-h1 text-foreground">
+              {member.full_name || member.email}
+            </h1>
+            <StatusBadge status={member.status} />
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span>Member since {fmtDateShort(member.joined_on)}</span>
+            <Badge variant="secondary" className="capitalize">
+              {member.role}
+            </Badge>
+            {member.wine_master ? (
+              <Badge tone="info">🍷 Wine Master</Badge>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <MemberEditForm
         slug={slug}
-        member={member as Membership}
-        isSelf={(member as Membership).id === ctx.membership.id}
+        member={member}
+        isSelf={member.id === ctx.membership.id}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Attendance history</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {attendance.length === 0 ? (
-            <p className="text-sm text-stone-500">No lunch history yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {attendance.map((h) => (
-                <li key={h.id} className="text-sm flex items-center gap-2 flex-wrap">
-                  <span className="text-stone-500">
-                    {fmtDateShort(h.lunch!.lunch_date)}
-                  </span>
-                  <span className="font-medium">{h.lunch!.title}</span>
-                  <StatusBadge status={h.status} />
-                  {h.attended === true && (
-                    <span className="text-xs text-emerald-700">attended</span>
-                  )}
-                  {h.attended === false && (
-                    <span className="text-xs text-red-600">no-show</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      <AttendanceHistory items={attendance} />
     </div>
   );
 }

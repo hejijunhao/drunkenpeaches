@@ -42,10 +42,10 @@ export function SignupForm() {
           minLength={8}
           required
         />
-        <p className="text-xs text-stone-500">At least 8 characters.</p>
+        <p className="text-xs text-muted-foreground">At least 8 characters.</p>
       </div>
       <FormError message={state.error} />
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" loading={pending}>
         {pending ? "Creating your club…" : "Create club"}
       </Button>
     </form>

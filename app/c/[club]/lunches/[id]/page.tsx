@@ -1,8 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  CalendarDaysIcon,
+  ClockIcon,
+  LockIcon,
+  MapPinIcon,
+  PencilIcon,
+  UserPlusIcon,
+} from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
-import { fmtDate, fmtTime, fmtDateTime } from "@/lib/format";
+import { fmtDate, fmtTime, fmtDateTime, initials } from "@/lib/format";
 import {
   guestPolicy,
   seatsTaken,
@@ -30,9 +38,20 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/error-banner";
 import { ConfirmSubmit } from "@/components/confirm-submit";
+import { SeatMeter } from "@/components/seat-meter";
+import { CopyButton } from "@/components/copy-button";
 import { SignupCard } from "./signup-card";
 
 type SignupRow = Signup & {
@@ -76,6 +95,7 @@ export default async function LunchDetailPage({
   const waitlisted = signups.filter((s) => s.status === "waitlisted");
   const taken = seatsTaken(signups);
   const seatsLeft = Math.max(0, lunch.capacity - taken);
+  const overCapacity = taken > lunch.capacity;
   const policy = guestPolicy(ctx.club, lunch);
   const cutoffPassed =
     !!lunch.signup_cutoff_at && new Date(lunch.signup_cutoff_at) < new Date();
@@ -120,56 +140,80 @@ export default async function LunchDetailPage({
     .filter((s) => s.memberships?.dietary_notes)
     .map((s) => `${s.memberships!.full_name}: ${s.memberships!.dietary_notes}`);
 
+  const restaurantList = [
+    `${lunch.title} — ${fmtDate(lunch.lunch_date)} — final headcount: ${taken}`,
+    "",
+    ...confirmed.map(
+      (s) =>
+        `${s.memberships?.full_name}${
+          s.guest_count > 0
+            ? ` + ${s.guest_count} guest${s.guest_count > 1 ? "s" : ""}${
+                s.guest_names ? ` (${s.guest_names})` : ""
+              }`
+            : ""
+        }`
+    ),
+    ...(dietary.length ? ["", "Dietary:", ...dietary.map((d) => `- ${d}`)] : []),
+  ].join("\n");
+
   return (
     <div className="space-y-8">
       <ErrorBanner message={error} />
 
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              {lunch.title}
-            </h1>
+      <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-h1 text-foreground">{lunch.title}</h1>
             <StatusBadge status={lunch.status} />
           </div>
-          <p className="mt-1 text-stone-600">
-            {fmtDate(lunch.lunch_date)} at {fmtTime(lunch.start_time)}
-          </p>
-          {lunch.venues && (
-            <p className="text-sm text-stone-500">
-              {lunch.venues.name}
-              {lunch.venues.address ? ` · ${lunch.venues.address}` : ""}
+          <div className="space-y-1.5 text-sm text-muted-foreground">
+            <p className="flex items-center gap-2">
+              <CalendarDaysIcon className="size-4 shrink-0" />
+              {fmtDate(lunch.lunch_date)}
+              <ClockIcon className="ml-1 size-4 shrink-0" />
+              {fmtTime(lunch.start_time)}
             </p>
-          )}
-          {lunch.signup_cutoff_at && lunch.status === "released" && (
-            <p className="text-sm text-stone-500 mt-1">
-              Sign-ups {cutoffPassed ? "locked since" : "lock at"}{" "}
-              {fmtDateTime(lunch.signup_cutoff_at)}
-            </p>
-          )}
-          {lunch.notes && (
-            <p className="mt-3 text-sm text-stone-600 whitespace-pre-line">
+            {lunch.venues ? (
+              <p className="flex items-center gap-2">
+                <MapPinIcon className="size-4 shrink-0" />
+                {lunch.venues.name}
+                {lunch.venues.address ? ` · ${lunch.venues.address}` : ""}
+              </p>
+            ) : null}
+            {lunch.signup_cutoff_at && lunch.status === "released" ? (
+              <p className="flex items-center gap-2">
+                <LockIcon className="size-4 shrink-0" />
+                Sign-ups {cutoffPassed ? "locked since" : "lock at"}{" "}
+                {fmtDateTime(lunch.signup_cutoff_at)}
+              </p>
+            ) : null}
+          </div>
+          {lunch.notes ? (
+            <p className="max-w-prose text-sm whitespace-pre-line text-foreground/90">
               {lunch.notes}
             </p>
-          )}
+          ) : null}
         </div>
-        <div className="text-right">
-          <p className="text-3xl font-semibold">
-            {taken}
-            <span className="text-stone-400">/{lunch.capacity}</span>
-          </p>
-          <p className="text-sm text-stone-500">seats taken</p>
-          {taken > lunch.capacity && (
-            <p className="text-xs text-red-600 font-medium mt-1">
-              over capacity — resolve before the lunch
-            </p>
-          )}
-        </div>
+
+        {lunch.status !== "draft" ? (
+          <Card className="shrink-0 gap-3 p-5 md:w-72">
+            <SeatMeter
+              taken={taken}
+              capacity={lunch.capacity}
+              waitlisted={waitlisted.length}
+            />
+            {overCapacity ? (
+              <p className="text-xs font-medium text-destructive">
+                Over capacity — resolve before the lunch.
+              </p>
+            ) : null}
+          </Card>
+        ) : null}
       </div>
 
       {/* Member sign-up */}
-      {lunch.status === "released" && (
+      {lunch.status === "released" ? (
         <SignupCard
           slug={slug}
           lunchId={lunch.id}
@@ -187,14 +231,14 @@ export default async function LunchDetailPage({
               : null
           }
         />
-      )}
+      ) : null}
 
       {/* Who's coming */}
-      {lunch.status !== "draft" && (
+      {lunch.status !== "draft" ? (
         <section className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
+              <CardTitle>
                 Confirmed ({confirmed.length}
                 {confirmed.some((s) => s.guest_count > 0) &&
                   ` + ${confirmed.reduce((n, s) => n + s.guest_count, 0)} guests`}
@@ -203,30 +247,45 @@ export default async function LunchDetailPage({
             </CardHeader>
             <CardContent>
               {confirmed.length === 0 ? (
-                <p className="text-sm text-stone-500">No one yet — be first!</p>
+                <p className="text-sm text-muted-foreground">
+                  No one yet — be first!
+                </p>
               ) : (
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {confirmed.map((s) => (
                     <li
                       key={s.id}
-                      className="flex items-center justify-between gap-2 text-sm"
+                      className="flex items-center justify-between gap-3 rounded-lg py-1.5"
                     >
-                      <span>
-                        {s.memberships?.full_name ?? "Unknown"}
-                        {s.guest_count > 0 && (
-                          <span className="text-stone-500">
-                            {" "}
-                            +{s.guest_count}
-                            {s.guest_names ? ` (${s.guest_names})` : ""}
-                          </span>
-                        )}
-                        {s.added_by_committee && (
-                          <span className="text-xs text-stone-400 ml-1">
-                            (added by committee)
-                          </span>
-                        )}
-                      </span>
-                      {ctx.isCommittee && lunch.status === "released" && (
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <Avatar size="sm">
+                          <AvatarFallback className="bg-primary/10 text-xs text-primary">
+                            {initials(s.memberships?.full_name ?? "?")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium">
+                            {s.memberships?.full_name ?? "Unknown"}
+                          </p>
+                          {s.guest_count > 0 || s.added_by_committee ? (
+                            <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                              {s.guest_count > 0 ? (
+                                <Badge variant="secondary" className="h-4">
+                                  +{s.guest_count} guest
+                                  {s.guest_count > 1 ? "s" : ""}
+                                  {s.guest_names ? ` · ${s.guest_names}` : ""}
+                                </Badge>
+                              ) : null}
+                              {s.added_by_committee ? (
+                                <Badge variant="outline" className="h-4">
+                                  added by committee
+                                </Badge>
+                              ) : null}
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
+                      {ctx.isCommittee && lunch.status === "released" ? (
                         <form
                           action={committeeRemoveSignupAction.bind(
                             null,
@@ -236,17 +295,17 @@ export default async function LunchDetailPage({
                           )}
                         >
                           <ConfirmSubmit
-                            confirmMessage={`Remove ${s.memberships?.full_name} from this lunch?`}
-                            variant="ghost"
+                            confirmTitle="Remove attendee?"
+                            confirmMessage={`Remove ${s.memberships?.full_name} from this lunch? If it's full, the waitlist is promoted.`}
+                            variant="destructive"
                             size="sm"
-                            className="text-red-600 h-7"
                           >
                             Remove
                           </ConfirmSubmit>
                         </form>
-                      )}
-                      {ctx.isCommittee && lunch.status === "completed" && (
-                        <span className="flex gap-1">
+                      ) : null}
+                      {ctx.isCommittee && lunch.status === "completed" ? (
+                        <div className="flex shrink-0 gap-1">
                           <form
                             action={markAttendanceAction.bind(
                               null,
@@ -258,9 +317,10 @@ export default async function LunchDetailPage({
                           >
                             <Button
                               type="submit"
-                              variant={s.attended === true ? "default" : "outline"}
+                              variant={
+                                s.attended === true ? "default" : "outline"
+                              }
                               size="sm"
-                              className="h-7 px-2 text-xs"
                             >
                               Present
                             </Button>
@@ -276,15 +336,16 @@ export default async function LunchDetailPage({
                           >
                             <Button
                               type="submit"
-                              variant={s.attended === false ? "default" : "outline"}
+                              variant={
+                                s.attended === false ? "destructive" : "outline"
+                              }
                               size="sm"
-                              className="h-7 px-2 text-xs"
                             >
                               No-show
                             </Button>
                           </form>
-                        </span>
-                      )}
+                        </div>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
@@ -294,27 +355,35 @@ export default async function LunchDetailPage({
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                Waitlist ({waitlisted.length})
-              </CardTitle>
+              <CardTitle>Waitlist ({waitlisted.length})</CardTitle>
             </CardHeader>
             <CardContent>
               {waitlisted.length === 0 ? (
-                <p className="text-sm text-stone-500">Empty — seats available.</p>
+                <p className="text-sm text-muted-foreground">
+                  Empty — seats available.
+                </p>
               ) : (
-                <ol className="space-y-2 list-decimal list-inside">
-                  {waitlisted.map((s) => (
+                <ol className="space-y-1">
+                  {waitlisted.map((s, i) => (
                     <li
                       key={s.id}
-                      className="text-sm flex items-center justify-between gap-2"
+                      className="flex items-center justify-between gap-3 rounded-lg py-1.5"
                     >
-                      <span>
-                        {s.memberships?.full_name ?? "Unknown"}
-                        {s.guest_count > 0 && (
-                          <span className="text-stone-500"> +{s.guest_count}</span>
-                        )}
-                      </span>
-                      {ctx.isCommittee && (
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground">
+                          {i + 1}
+                        </span>
+                        <span className="truncate text-sm">
+                          {s.memberships?.full_name ?? "Unknown"}
+                          {s.guest_count > 0 ? (
+                            <span className="text-muted-foreground">
+                              {" "}
+                              +{s.guest_count}
+                            </span>
+                          ) : null}
+                        </span>
+                      </div>
+                      {ctx.isCommittee ? (
                         <form
                           action={committeeRemoveSignupAction.bind(
                             null,
@@ -324,15 +393,15 @@ export default async function LunchDetailPage({
                           )}
                         >
                           <ConfirmSubmit
+                            confirmTitle="Remove from waitlist?"
                             confirmMessage={`Remove ${s.memberships?.full_name} from the waitlist?`}
-                            variant="ghost"
+                            variant="destructive"
                             size="sm"
-                            className="text-red-600 h-7"
                           >
                             Remove
                           </ConfirmSubmit>
                         </form>
-                      )}
+                      ) : null}
                     </li>
                   ))}
                 </ol>
@@ -340,73 +409,84 @@ export default async function LunchDetailPage({
             </CardContent>
           </Card>
         </section>
-      )}
+      ) : null}
 
-      {/* Committee panel */}
-      {ctx.isCommittee && (
+      {/* Committee control room */}
+      {ctx.isCommittee ? (
         <section className="space-y-6">
           <Separator />
-          <h2 className="text-lg font-medium">Committee</h2>
+          <h2 className="text-h2 text-foreground">Committee</h2>
 
+          {/* Action toolbar */}
           <div className="flex flex-wrap gap-2">
-            {lunch.status === "draft" && (
+            {lunch.status === "draft" ? (
               <form action={releaseLunchAction.bind(null, slug, lunch.id)}>
-                <ConfirmSubmit confirmMessage="Release this lunch to members? They'll see it next time they log in (no email is sent).">
+                <ConfirmSubmit
+                  confirmTitle="Release to members?"
+                  confirmMessage="Members will see this lunch next time they log in (no email is sent)."
+                  confirmLabel="Release"
+                >
                   Release to members
                 </ConfirmSubmit>
               </form>
-            )}
+            ) : null}
             <Button
               variant="outline"
               render={<Link href={`/c/${slug}/lunches/${lunch.id}/edit`} />}
             >
+              <PencilIcon />
               Edit details
             </Button>
-            {lunch.status === "released" && (
+            {lunch.status === "released" ? (
               <form action={completeLunchAction.bind(null, slug, lunch.id)}>
                 <ConfirmSubmit
-                  confirmMessage="Mark this lunch as completed? You can then record attendance."
+                  confirmTitle="Mark completed?"
+                  confirmMessage="You can then record attendance for this lunch."
+                  confirmLabel="Mark completed"
                   variant="outline"
                 >
                   Mark completed
                 </ConfirmSubmit>
               </form>
-            )}
-            {(lunch.status === "draft" || lunch.status === "released") && (
+            ) : null}
+            {lunch.status === "draft" || lunch.status === "released" ? (
               <form action={cancelLunchAction.bind(null, slug, lunch.id)}>
                 <ConfirmSubmit
-                  confirmMessage="Cancel this lunch? Everyone signed up or waitlisted will be emailed."
-                  variant="outline"
-                  className="text-red-600 hover:text-red-700"
+                  confirmTitle="Cancel this lunch?"
+                  confirmMessage="Everyone signed up or waitlisted will be emailed."
+                  confirmLabel="Cancel lunch"
+                  variant="destructive"
                 >
                   Cancel lunch
                 </ConfirmSubmit>
               </form>
-            )}
-            {lunch.status === "draft" && (
+            ) : null}
+            {lunch.status === "draft" ? (
               <form action={deleteDraftLunchAction.bind(null, slug, lunch.id)}>
                 <ConfirmSubmit
-                  confirmMessage="Delete this draft lunch permanently?"
-                  variant="ghost"
-                  className="text-red-600 hover:text-red-700"
+                  confirmTitle="Delete draft?"
+                  confirmMessage="This permanently deletes the draft lunch."
+                  confirmLabel="Delete draft"
+                  variant="destructive"
                 >
                   Delete draft
                 </ConfirmSubmit>
               </form>
-            )}
+            ) : null}
           </div>
 
+          {/* Capacity & cutoff */}
           <div className="grid gap-6 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Capacity (X)</CardTitle>
+                <CardTitle>Capacity</CardTitle>
               </CardHeader>
               <CardContent>
                 <form
                   action={setCapacityAction.bind(null, slug, lunch.id)}
                   className="flex items-end gap-2"
                 >
-                  <div className="space-y-2 flex-1">
+                  <div className="flex-1 space-y-2">
                     <Label htmlFor="capacity">
                       Seats booked at the restaurant
                     </Label>
@@ -422,7 +502,7 @@ export default async function LunchDetailPage({
                     Update
                   </Button>
                 </form>
-                <p className="mt-2 text-xs text-stone-500">
+                <p className="mt-2 text-xs text-muted-foreground">
                   Raising it auto-promotes the waitlist (with emails). Lowering
                   it never bumps confirmed attendees — resolve overages by hand.
                 </p>
@@ -431,14 +511,14 @@ export default async function LunchDetailPage({
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Sign-up cutoff</CardTitle>
+                <CardTitle>Sign-up cutoff</CardTitle>
               </CardHeader>
               <CardContent>
                 <form
                   action={setCutoffAction.bind(null, slug, lunch.id)}
                   className="flex items-end gap-2"
                 >
-                  <div className="space-y-2 flex-1">
+                  <div className="flex-1 space-y-2">
                     <Label htmlFor="cutoffAt">
                       {cutoffPassed ? "Locked — move it to reopen" : "Locks at"}
                     </Label>
@@ -459,117 +539,108 @@ export default async function LunchDetailPage({
                     Save
                   </Button>
                 </form>
-                <p className="mt-2 text-xs text-stone-500">
+                <p className="mt-2 text-xs text-muted-foreground">
                   Clear it to leave sign-ups open until the lunch.
                 </p>
               </CardContent>
             </Card>
           </div>
 
+          {/* Manually add a member */}
           {(lunch.status === "draft" || lunch.status === "released") &&
-            addable.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">
-                    Manually add a member
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <form
-                    action={committeeAddSignupAction.bind(null, slug, lunch.id)}
-                    className="flex flex-wrap items-end gap-3"
-                  >
-                    <div className="space-y-2">
-                      <Label htmlFor="membershipId">Member</Label>
-                      <select
-                        id="membershipId"
-                        name="membershipId"
-                        className="flex h-9 min-w-48 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-                        required
-                      >
-                        <option value="">Pick a member…</option>
+          addable.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Manually add a member</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form
+                  action={committeeAddSignupAction.bind(null, slug, lunch.id)}
+                  className="grid gap-4 sm:grid-cols-[1fr_auto_auto] sm:items-end"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="membershipId">Member</Label>
+                    <Select name="membershipId" required>
+                      <SelectTrigger id="membershipId" className="w-full">
+                        <SelectValue placeholder="Pick a member…" />
+                      </SelectTrigger>
+                      <SelectContent>
                         {addable.map((m) => (
-                          <option key={m.id} value={m.id}>
+                          <SelectItem key={m.id} value={m.id}>
                             {m.full_name || m.email}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="addGuests">Guests</Label>
-                      <Input
-                        id="addGuests"
-                        name="guestCount"
-                        type="number"
-                        min={0}
-                        defaultValue={0}
-                        className="w-20"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-sm pb-2">
-                      <Checkbox name="force" />
-                      Seat even if full (override)
-                    </label>
-                    <Button type="submit" variant="outline">
-                      Add
-                    </Button>
-                  </form>
-                  <p className="mt-2 text-xs text-stone-500">
-                    Ignores the cutoff. Without the override, they join the
-                    waitlist when the lunch is full.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="addGuests">Guests</Label>
+                    <Input
+                      id="addGuests"
+                      name="guestCount"
+                      type="number"
+                      min={0}
+                      defaultValue={0}
+                      className="w-20"
+                    />
+                  </div>
+                  <Button type="submit" variant="outline">
+                    <UserPlusIcon />
+                    Add
+                  </Button>
+                  <label className="flex items-center gap-2 text-sm sm:col-span-3">
+                    <Checkbox name="force" />
+                    Seat even if full (override)
+                  </label>
+                </form>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Ignores the cutoff. Without the override, they join the
+                  waitlist when the lunch is full.
+                </p>
+              </CardContent>
+            </Card>
+          ) : null}
 
+          {/* Restaurant list */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">
-                Restaurant list — dietary notes
-              </CardTitle>
+              <CardTitle>Restaurant list — dietary notes</CardTitle>
+              {confirmed.length > 0 ? (
+                <CardContent className="px-0 pt-1">
+                  <CopyButton
+                    text={restaurantList}
+                    label="Copy for the restaurant"
+                  />
+                </CardContent>
+              ) : null}
             </CardHeader>
             <CardContent>
               {confirmed.length === 0 ? (
-                <p className="text-sm text-stone-500">No confirmed attendees yet.</p>
+                <p className="text-sm text-muted-foreground">
+                  No confirmed attendees yet.
+                </p>
               ) : (
-                <div className="text-sm space-y-1 font-mono bg-stone-50 rounded-md border p-4">
-                  <p>
-                    {lunch.title} — {fmtDate(lunch.lunch_date)} — final headcount:{" "}
-                    {taken}
-                  </p>
-                  <p>&nbsp;</p>
-                  {confirmed.map((s) => (
-                    <p key={s.id}>
-                      {s.memberships?.full_name}
-                      {s.guest_count > 0 &&
-                        ` + ${s.guest_count} guest${s.guest_count > 1 ? "s" : ""}${s.guest_names ? ` (${s.guest_names})` : ""}`}
-                    </p>
-                  ))}
-                  {dietary.length > 0 && (
-                    <>
-                      <p>&nbsp;</p>
-                      <p>Dietary:</p>
-                      {dietary.map((d, i) => (
-                        <p key={i}>- {d}</p>
-                      ))}
-                    </>
-                  )}
-                </div>
+                <pre className="overflow-x-auto rounded-xl border border-border bg-muted p-4 font-mono text-xs whitespace-pre-wrap text-foreground/90">
+                  {restaurantList}
+                </pre>
               )}
             </CardContent>
           </Card>
 
           {/* Wine Master corner */}
-          {ctx.isWineMaster && (
-            <Card>
+          {ctx.isWineMaster ? (
+            <Card className="border-gold/30">
               <CardHeader>
-                <CardTitle className="text-base">
-                  🍷 Wine selection & pairing
+                <CardTitle className="flex items-center gap-2">
+                  <span className="text-gold" aria-hidden>
+                    🍷
+                  </span>
+                  Wine selection &amp; pairing
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {lunchWines.length === 0 ? (
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-muted-foreground">
                     No wines selected for this lunch yet.
                   </p>
                 ) : (
@@ -577,22 +648,26 @@ export default async function LunchDetailPage({
                     {lunchWines.map((lw) => (
                       <li
                         key={lw.id}
-                        className="flex items-start justify-between gap-2 text-sm"
+                        className="flex items-start justify-between gap-3 rounded-lg border border-border p-3 text-sm"
                       >
                         <span>
                           <span className="font-medium">
                             {lw.wines?.name}
                             {lw.wines?.vintage ? ` ${lw.wines.vintage}` : ""}
-                          </span>
-                          <span className="text-stone-500">
-                            {" "}
-                            ({lw.wines?.source === "cellar" ? "club cellar" : "restaurant list"})
-                          </span>
-                          {lw.pairing_notes && (
-                            <span className="block text-stone-600">
+                          </span>{" "}
+                          <Badge
+                            tone={lw.wines?.source === "cellar" ? "info" : "neutral"}
+                            className="ml-1 align-middle"
+                          >
+                            {lw.wines?.source === "cellar"
+                              ? "club cellar"
+                              : "restaurant list"}
+                          </Badge>
+                          {lw.pairing_notes ? (
+                            <span className="mt-0.5 block text-muted-foreground">
                               {lw.pairing_notes}
                             </span>
-                          )}
+                          ) : null}
                         </span>
                         <form
                           action={removeLunchWineAction.bind(
@@ -602,12 +677,7 @@ export default async function LunchDetailPage({
                             lw.id
                           )}
                         >
-                          <Button
-                            type="submit"
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 h-7"
-                          >
+                          <Button type="submit" variant="destructive" size="sm">
                             Remove
                           </Button>
                         </form>
@@ -617,11 +687,11 @@ export default async function LunchDetailPage({
                 )}
 
                 {wines.length === 0 ? (
-                  <p className="text-sm text-stone-500">
+                  <p className="text-sm text-muted-foreground">
                     Your cellar is empty —{" "}
                     <Link
                       href={`/c/${slug}/wine`}
-                      className="underline underline-offset-4"
+                      className="text-foreground underline underline-offset-4 hover:text-primary"
                     >
                       add wines to the catalogue
                     </Link>{" "}
@@ -630,27 +700,26 @@ export default async function LunchDetailPage({
                 ) : (
                   <form
                     action={addLunchWineAction.bind(null, slug, lunch.id)}
-                    className="flex flex-wrap items-end gap-3"
+                    className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
                   >
                     <div className="space-y-2">
                       <Label htmlFor="wineId">Wine</Label>
-                      <select
-                        id="wineId"
-                        name="wineId"
-                        className="flex h-9 min-w-48 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-                        required
-                      >
-                        <option value="">Pick a wine…</option>
-                        {wines.map((w) => (
-                          <option key={w.id} value={w.id}>
-                            {w.name}
-                            {w.vintage ? ` ${w.vintage}` : ""} ·{" "}
-                            {w.source === "cellar" ? "cellar" : "restaurant"}
-                          </option>
-                        ))}
-                      </select>
+                      <Select name="wineId" required>
+                        <SelectTrigger id="wineId" className="w-full">
+                          <SelectValue placeholder="Pick a wine…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {wines.map((w) => (
+                            <SelectItem key={w.id} value={w.id}>
+                              {w.name}
+                              {w.vintage ? ` ${w.vintage}` : ""} ·{" "}
+                              {w.source === "cellar" ? "cellar" : "restaurant"}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="space-y-2 flex-1 min-w-48">
+                    <div className="space-y-2">
                       <Label htmlFor="pairingNotes">Pairing</Label>
                       <Input
                         id="pairingNotes"
@@ -658,19 +727,19 @@ export default async function LunchDetailPage({
                         placeholder="With the main — ribeye"
                       />
                     </div>
-                    <Button type="submit" variant="outline">
+                    <Button type="submit" variant="gold">
                       Add wine
                     </Button>
                   </form>
                 )}
-                <p className="text-xs text-stone-500">
+                <p className="text-xs text-muted-foreground">
                   Members never see this — the blind tasting stays in the room.
                 </p>
               </CardContent>
             </Card>
-          )}
+          ) : null}
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

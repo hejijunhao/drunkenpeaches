@@ -1,13 +1,22 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
+import { UserPlusIcon } from "lucide-react";
 import { inviteMemberAction } from "@/app/actions/members";
 import type { FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { FormError } from "@/components/form-error";
+import { useSuccessToast } from "@/lib/use-success-toast";
 
 export function InviteForm({ slug }: { slug: string }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
@@ -15,57 +24,58 @@ export function InviteForm({ slug }: { slug: string }) {
     {}
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const submitted = useRef(false);
 
-  // Clear the form after a successful invite.
+  useSuccessToast(pending, state.error, "Invite sent");
+
+  // Clear the form only after a real, successful submit.
   useEffect(() => {
-    if (state && !state.error) formRef.current?.reset();
-  }, [state]);
+    if (submitted.current && !pending && !state.error) {
+      formRef.current?.reset();
+    }
+    if (pending) submitted.current = true;
+  }, [pending, state]);
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Invite a member</CardTitle>
+        <CardTitle>Invite a member</CardTitle>
       </CardHeader>
       <CardContent>
         <form
           ref={formRef}
           action={formAction}
-          className="flex flex-wrap items-end gap-3"
+          className="grid gap-4 sm:grid-cols-[1fr_1fr_auto_auto] sm:items-end"
         >
           <div className="space-y-2">
             <Label htmlFor="fullName">Name</Label>
-            <Input id="fullName" name="fullName" required className="min-w-44" />
+            <Input id="fullName" name="fullName" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="min-w-52"
-            />
+            <Input id="email" name="email" type="email" required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <select
-              id="role"
-              name="role"
-              className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs"
-              defaultValue="member"
-            >
-              <option value="member">Member</option>
-              <option value="committee">Committee</option>
-            </select>
+            <Select name="role" defaultValue="member">
+              <SelectTrigger id="role" className="w-full sm:w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="committee">Committee</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Button type="submit" disabled={pending}>
-            {pending ? "Sending…" : "Send invite"}
+          <Button type="submit" loading={pending}>
+            <UserPlusIcon />
+            Send invite
           </Button>
-          <div className="basis-full">
+          <div className="sm:col-span-4">
             <FormError message={state.error} />
           </div>
         </form>
-        <p className="mt-2 text-xs text-stone-500">
+        <p className="mt-3 text-xs text-muted-foreground">
           They&apos;ll get an email to set a password and complete their
           profile. Membership is invitation-only.
         </p>

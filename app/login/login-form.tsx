@@ -31,7 +31,7 @@ export function LoginForm({ next }: { next?: string }) {
         />
       </div>
       <FormError message={state.error} />
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" loading={pending}>
         {pending ? "Signing in…" : "Sign in"}
       </Button>
     </form>

@@ -1,17 +1,22 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { CalendarOffIcon, PlusIcon } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
-import { fmtDateShort, fmtTime } from "@/lib/format";
 import { seatsTaken, type Lunch, type Signup } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { StatusBadge } from "@/components/status-badge";
+import { PageHeader } from "@/components/page-header";
+import { EmptyState } from "@/components/empty-state";
+import { LunchCard } from "@/components/lunch-card";
 import { ErrorBanner } from "@/components/error-banner";
 
 export const metadata: Metadata = { title: "Lunches" };
 
 type LunchRow = Lunch & { venues: { name: string } | null };
+type SignupLite = Pick<
+  Signup,
+  "id" | "lunch_id" | "membership_id" | "status" | "guest_count"
+>;
 
 export default async function LunchesPage({
   params,
@@ -39,10 +44,7 @@ export default async function LunchesPage({
   ]);
 
   const lunches = (lunchData ?? []) as LunchRow[];
-  const signups = (signupData ?? []) as Pick<
-    Signup,
-    "id" | "lunch_id" | "membership_id" | "status" | "guest_count"
-  >[];
+  const signups = (signupData ?? []) as SignupLite[];
 
   const upcoming = lunches
     .filter((l) => l.lunch_date >= today && l.status !== "cancelled")
@@ -51,63 +53,74 @@ export default async function LunchesPage({
     (l) => l.lunch_date < today || l.status === "cancelled"
   );
 
-  function row(l: LunchRow) {
+  function card(l: LunchRow) {
     const ls = signups.filter((s) => s.lunch_id === l.id);
     const mine = ls.find(
       (s) => s.membership_id === ctx.membership.id && s.status !== "cancelled"
     );
     return (
-      <Link key={l.id} href={`/c/${slug}/lunches/${l.id}`}>
-        <Card className="hover:shadow-sm transition-shadow">
-          <CardContent className="py-4 flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium">{l.title}</span>
-                <StatusBadge status={l.status} />
-                {mine && <StatusBadge status={mine.status} />}
-              </div>
-              <p className="text-sm text-stone-500 mt-1">
-                {fmtDateShort(l.lunch_date)} at {fmtTime(l.start_time)}
-                {l.venues ? ` · ${l.venues.name}` : ""}
-              </p>
-            </div>
-            <div className="text-sm text-stone-500">
-              {seatsTaken(ls)}/{l.capacity} seats
-              {ls.filter((s) => s.status === "waitlisted").length > 0 &&
-                ` · ${ls.filter((s) => s.status === "waitlisted").length} waitlisted`}
-            </div>
-          </CardContent>
-        </Card>
-      </Link>
+      <LunchCard
+        key={l.id}
+        href={`/c/${slug}/lunches/${l.id}`}
+        title={l.title}
+        status={l.status}
+        date={l.lunch_date}
+        venueName={l.venues?.name}
+        taken={seatsTaken(ls)}
+        capacity={l.capacity}
+        waitlisted={ls.filter((s) => s.status === "waitlisted").length}
+        mySignupStatus={mine?.status}
+      />
     );
   }
 
   return (
     <div className="space-y-8">
       <ErrorBanner message={error} />
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Lunches</h1>
-        {ctx.isCommittee && (
+      <PageHeader title="Lunches">
+        {ctx.isCommittee ? (
           <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
+            <PlusIcon />
             New lunch
           </Button>
-        )}
-      </div>
+        ) : null}
+      </PageHeader>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-medium">Upcoming</h2>
-        {upcoming.length === 0 && (
-          <p className="text-sm text-stone-500">Nothing on the calendar yet.</p>
+        <h2 className="text-h2 text-foreground">Upcoming</h2>
+        {upcoming.length === 0 ? (
+          <EmptyState
+            icon={CalendarOffIcon}
+            title="Nothing on the calendar yet"
+            description={
+              ctx.isCommittee
+                ? "Create a lunch and release it to members once the booking is confirmed."
+                : "Check back when the committee releases the next lunch."
+            }
+            action={
+              ctx.isCommittee ? (
+                <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
+                  <PlusIcon />
+                  New lunch
+                </Button>
+              ) : undefined
+            }
+          />
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {upcoming.map(card)}
+          </div>
         )}
-        <div className="space-y-3">{upcoming.map(row)}</div>
       </section>
 
-      {past.length > 0 && (
+      {past.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-lg font-medium">Past & cancelled</h2>
-          <div className="space-y-3">{past.map(row)}</div>
+          <h2 className="text-h2 text-foreground">Past &amp; cancelled</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {past.map(card)}
+          </div>
         </section>
-      )}
+      ) : null}
     </div>
   );
 }

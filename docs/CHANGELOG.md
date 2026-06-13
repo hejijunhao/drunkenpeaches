@@ -4,7 +4,62 @@ All notable changes to Drunken Peaches are recorded here. Newest first.
 
 ## Index
 
+- **[0.2.0](#020--2026-06-13)** — Front-end redesign: "editorial wine-cellar" design system, light + dark themes, new component library, and a full screen-by-screen UI overhaul.
 - **[0.1.0](#010--2026-06-13)** — Initial build: multi-tenant club lunch & member management (auth, members, venues, lunches, sign-ups/waitlist, wine, email, reminder cron).
+
+---
+
+## 0.2.0 — 2026-06-13
+
+A complete **front-end redesign** — turning the stock-grayscale shadcn build into
+a branded, top-tier 2026 product. **Front-end only**: no changes to the data
+model, RLS, SQL functions, or server actions. Implemented in phases; detailed
+per-phase notes in [`docs/completions/`](./completions/).
+
+### Design foundation (Phase 0)
+
+- **"Editorial wine-cellar" tokens** in `app/globals.css` — burgundy/oxblood +
+  parchment/cream in OKLCH, full **light + dark** themes, a `--gold` premium
+  accent, a semantic status set (success/warning/danger/neutral/info), two-tier
+  warm `shadow-soft`/`shadow-lifted`, motion tokens, and a global
+  `prefers-reduced-motion` guard.
+- **Fraunces** display serif (via `next/font`) for headings; Geist kept for body.
+- **`next-themes`** wired (`ThemeProvider`, `ThemeToggle`); body de-hardcoded to
+  the token-driven canvas.
+
+### Component library (Phase 1)
+
+- Refined Button (`loading`, `gold` variant), Card (`hover`), Badge (`tone` +
+  `dot`), Input/Textarea, Table, Select, Dialog.
+- New: `PageHeader`, `EmptyState`, `SeatMeter`, `DataList` (responsive
+  table→cards), `Skeleton`, `ConfirmDialog` (+ rewritten `ConfirmSubmit`),
+  `LunchCard`, `AttendanceHistory`, `CopyButton`, `AuthShell`, toast helpers.
+- `StatusBadge`/`FormError`/`ErrorBanner` rebuilt on tokens.
+
+### Screen overhaul (Phases 2–9)
+
+- **App shell**: token-driven sticky nav, burgundy active state, theme toggle +
+  dropdown user menu, animated mobile sheet.
+- **Marketing & auth**: editorial landing hero; one branded `AuthShell` across
+  login/signup/forgot/reset/set-password.
+- **Dashboard**: next-lunch hero with a seat meter, refined "coming up" cards,
+  committee stat tiles.
+- **Lunches**: refined list, editorial detail header, three-state SignupCard,
+  organized committee control room, polished create/edit form.
+- **Members**: CRM-style roster (responsive DataList, avatars), Select-based
+  invite/edit, shared attendance timeline, remove-confirm.
+- **Venues**: kanban pipeline with an add-venue dialog; sectioned detail with a
+  status toolbar and tidy tastings.
+- **Wine**: gold-accented catalogue (DataList), cleaner add form.
+- **Settings & profile**: grouped setting cards, avatar profile header, toasts,
+  a theme preference row.
+
+### Cross-cutting (Phase 10)
+
+- Standardized motion (all reduced-motion safe), AA-minded tokens, icon-button
+  labels, `loading.tsx` skeletons for data-heavy routes.
+- Zero native `<select>` and zero `window.confirm` remain; every success uses a
+  toast or revalidated UI; OpenGraph/Twitter metadata added.
 
 ---
 

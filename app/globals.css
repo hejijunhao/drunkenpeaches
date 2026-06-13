@@ -7,9 +7,55 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+
+  /* Fonts — Geist Sans body, Fraunces editorial display, Geist Mono */
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-fraunces);
+
+  /* Surfaces & actions */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand premium accent */
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+
+  /* Semantic status system — shared by Badge tones, dots & banners */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-neutral: var(--neutral);
+  --color-neutral-foreground: var(--neutral-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* Charts (warm burgundy→gold ramp) */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar (unused today, kept warm to avoid grayscale leak) */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -18,27 +64,21 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
+
+  /* Elevation — two-tier, warm-tinted (driven by --shadow-color per theme) */
+  --shadow-soft:
+    0 1px 2px 0 oklch(var(--shadow-color) / 0.04),
+    0 2px 6px -1px oklch(var(--shadow-color) / 0.08);
+  --shadow-lifted:
+    0 4px 12px -2px oklch(var(--shadow-color) / 0.12),
+    0 12px 28px -6px oklch(var(--shadow-color) / 0.12);
+
+  /* Standardized motion */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-micro: 150ms;
+  --duration-default: 220ms;
+  --duration-overlay: 300ms;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -48,73 +88,124 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Light theme — editorial wine cellar: parchment canvas, oxblood primary,
+   warm ink. Pairs verified for WCAG AA (see Phase 10 audit).
+   ───────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --background: oklch(0.985 0.006 70); /* warm parchment, not pure white */
+  --foreground: oklch(0.22 0.02 40); /* warm near-black ink */
+  --card: oklch(1 0 0); /* crisp white panels */
+  --card-foreground: oklch(0.22 0.02 40);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --popover-foreground: oklch(0.22 0.02 40);
+
+  --primary: oklch(0.38 0.13 18); /* oxblood — CTA, links, active nav */
+  --primary-foreground: oklch(0.97 0.01 80); /* cream */
+  --secondary: oklch(0.95 0.012 70); /* muted parchment chips/btns */
+  --secondary-foreground: oklch(0.28 0.02 40);
+  --muted: oklch(0.96 0.008 70); /* table headers, inset panels */
+  --muted-foreground: oklch(0.5 0.015 50); /* secondary text */
+  --accent: oklch(0.93 0.02 60); /* nav/row hover wash */
+  --accent-foreground: oklch(0.28 0.02 40);
+  --destructive: oklch(0.55 0.2 27); /* warmed red */
+  --destructive-foreground: oklch(0.98 0.01 80);
+
+  --border: oklch(0.9 0.01 70); /* warm hairline */
+  --input: oklch(0.9 0.01 70);
+  --ring: oklch(0.55 0.09 18); /* burgundy-tinted focus */
+
+  --gold: oklch(0.78 0.11 85); /* wine-master / premium */
+  --gold-foreground: oklch(0.28 0.04 70);
+
+  /* Status — text-legible saturated tone in light (used as text + soft tint) */
+  --success: oklch(0.52 0.13 155);
+  --success-foreground: oklch(0.98 0.01 150);
+  --warning: oklch(0.55 0.12 65);
+  --warning-foreground: oklch(0.98 0.01 90);
+  --danger: oklch(0.55 0.2 27);
+  --danger-foreground: oklch(0.98 0.01 80);
+  --neutral: oklch(0.5 0.015 50);
+  --neutral-foreground: oklch(0.98 0.006 80);
+  --info: oklch(0.38 0.13 18); /* burgundy — "completed" */
+  --info-foreground: oklch(0.97 0.01 80);
+
+  --chart-1: oklch(0.38 0.13 18);
+  --chart-2: oklch(0.55 0.12 40);
+  --chart-3: oklch(0.7 0.11 65);
+  --chart-4: oklch(0.78 0.11 85);
+  --chart-5: oklch(0.52 0.13 155);
+
+  --radius: 0.75rem; /* softer than stock 0.625 */
+  --shadow-color: 0.3 0.04 40; /* warm ink for tinted shadows */
+
+  --sidebar: oklch(0.97 0.008 70);
+  --sidebar-foreground: oklch(0.22 0.02 40);
+  --sidebar-primary: oklch(0.38 0.13 18);
+  --sidebar-primary-foreground: oklch(0.97 0.01 80);
+  --sidebar-accent: oklch(0.93 0.02 60);
+  --sidebar-accent-foreground: oklch(0.28 0.02 40);
+  --sidebar-border: oklch(0.9 0.01 70);
+  --sidebar-ring: oklch(0.55 0.09 18);
 }
 
+/* ─────────────────────────────────────────────────────────────────────────
+   Dark theme — a genuine dark cellar: warm near-black aubergine canvas,
+   parchment text, burgundy lifted for AA contrast.
+   ───────────────────────────────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.18 0.012 30); /* warm near-black, faint aubergine */
+  --foreground: oklch(0.94 0.01 80); /* parchment text */
+  --card: oklch(0.22 0.014 30); /* raised panel */
+  --card-foreground: oklch(0.94 0.01 80);
+  --popover: oklch(0.22 0.014 30);
+  --popover-foreground: oklch(0.94 0.01 80);
+
+  --primary: oklch(0.62 0.16 18); /* brighter burgundy for AA on dark */
+  --primary-foreground: oklch(0.16 0.01 30);
+  --secondary: oklch(0.28 0.016 30);
+  --secondary-foreground: oklch(0.94 0.01 80);
+  --muted: oklch(0.26 0.014 30);
+  --muted-foreground: oklch(0.7 0.012 70);
+  --accent: oklch(0.3 0.02 30);
+  --accent-foreground: oklch(0.94 0.01 80);
+  --destructive: oklch(0.65 0.19 27);
+  --destructive-foreground: oklch(0.98 0.01 80);
+
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.62 0.13 18);
+
+  --gold: oklch(0.8 0.12 85);
+  --gold-foreground: oklch(0.2 0.03 70);
+
+  --success: oklch(0.72 0.15 155);
+  --success-foreground: oklch(0.16 0.02 150);
+  --warning: oklch(0.8 0.13 75);
+  --warning-foreground: oklch(0.2 0.03 70);
+  --danger: oklch(0.7 0.19 27);
+  --danger-foreground: oklch(0.16 0.02 30);
+  --neutral: oklch(0.7 0.012 70);
+  --neutral-foreground: oklch(0.16 0.01 30);
+  --info: oklch(0.62 0.16 18);
+  --info-foreground: oklch(0.16 0.01 30);
+
+  --chart-1: oklch(0.62 0.16 18);
+  --chart-2: oklch(0.68 0.13 45);
+  --chart-3: oklch(0.75 0.12 70);
+  --chart-4: oklch(0.8 0.12 85);
+  --chart-5: oklch(0.72 0.15 155);
+
+  --shadow-color: 0 0 0; /* black depth on dark */
+
+  --sidebar: oklch(0.22 0.014 30);
+  --sidebar-foreground: oklch(0.94 0.01 80);
+  --sidebar-primary: oklch(0.62 0.16 18);
+  --sidebar-primary-foreground: oklch(0.16 0.01 30);
+  --sidebar-accent: oklch(0.3 0.02 30);
+  --sidebar-accent-foreground: oklch(0.94 0.01 80);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.62 0.13 18);
 }
 
 @layer base {
@@ -126,5 +217,55 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Typography — editorial type scale. Use these or the `font-heading` utility
+   so display/headings consistently render in Fraunces.
+   ───────────────────────────────────────────────────────────────────────── */
+@layer components {
+  .font-heading {
+    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+  }
+  .text-display {
+    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: clamp(2.25rem, 1.4rem + 3.4vw, 3.25rem);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+  }
+  .text-h1 {
+    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: 1.875rem;
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+  }
+  .text-h2 {
+    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.25;
+    letter-spacing: -0.008em;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Motion — global reduced-motion guard. Every animation/transition in the app
+   collapses to instant when the user requests reduced motion.
+   ───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -9,8 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { FormError } from "@/components/form-error";
+import { useSuccessToast } from "@/lib/use-success-toast";
 
-export function VenueForm({ slug, venue }: { slug: string; venue?: Venue }) {
+export function VenueForm({
+  slug,
+  venue,
+  onSuccess,
+}: {
+  slug: string;
+  venue?: Venue;
+  /** Called after a successful create/update (e.g. to close a dialog). */
+  onSuccess?: () => void;
+}) {
   const action = venue
     ? updateVenueAction.bind(null, slug, venue.id)
     : createVenueAction.bind(null, slug);
@@ -19,13 +29,20 @@ export function VenueForm({ slug, venue }: { slug: string; venue?: Venue }) {
     {}
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const submitted = useRef(false);
+
+  useSuccessToast(pending, state.error, venue ? "Venue saved" : "Venue added");
 
   useEffect(() => {
-    if (!venue && state && !state.error) formRef.current?.reset();
-  }, [state, venue]);
+    if (submitted.current && !pending && !state.error) {
+      if (!venue) formRef.current?.reset();
+      onSuccess?.();
+    }
+    if (pending) submitted.current = true;
+  }, [pending, state, venue, onSuccess]);
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-4 max-w-xl">
+    <form ref={formRef} action={formAction} className="max-w-xl space-y-4">
       <div className="space-y-2">
         <Label htmlFor="name">Restaurant name</Label>
         <Input id="name" name="name" defaultValue={venue?.name ?? ""} required />
@@ -34,10 +51,14 @@ export function VenueForm({ slug, venue }: { slug: string; venue?: Venue }) {
         <Label htmlFor="address">Address</Label>
         <Input id="address" name="address" defaultValue={venue?.address ?? ""} />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="contact">Contact (name / phone)</Label>
-          <Input id="contact" name="contact" defaultValue={venue?.contact ?? ""} />
+          <Input
+            id="contact"
+            name="contact"
+            defaultValue={venue?.contact ?? ""}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="defaultCapacity">Private room capacity</Label>
@@ -61,8 +82,12 @@ export function VenueForm({ slug, venue }: { slug: string; venue?: Venue }) {
         />
       </div>
       <FormError message={state.error} />
-      <Button type="submit" disabled={pending} variant={venue ? "default" : "outline"}>
-        {pending ? "Saving…" : venue ? "Save venue" : "Add candidate venue"}
+      <Button
+        type="submit"
+        loading={pending}
+        variant={venue ? "default" : "outline"}
+      >
+        {venue ? "Save venue" : "Add candidate venue"}
       </Button>
     </form>
   );

@@ -20,7 +20,7 @@ export default async function ClubLayout({
         isCommittee={ctx.isCommittee}
         isWineMaster={ctx.isWineMaster}
       />
-      <main className="flex-1 mx-auto w-full max-w-6xl px-4 sm:px-6 py-8">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
         {children}
       </main>
     </div>

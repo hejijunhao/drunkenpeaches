@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { WineIcon } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import type { Wine } from "@/lib/types";
 import { deleteWineAction } from "@/app/actions/wine";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/page-header";
+import { DataList, type DataListColumn } from "@/components/data-list";
+import { EmptyState } from "@/components/empty-state";
 import { ErrorBanner } from "@/components/error-banner";
 import { ConfirmSubmit } from "@/components/confirm-submit";
 import { WineForm } from "./wine-form";
@@ -39,73 +36,92 @@ export default async function WinePage({
     .order("name");
   const wines = (data ?? []) as Wine[];
 
+  const columns: DataListColumn<Wine>[] = [
+    {
+      key: "name",
+      header: "Wine",
+      primary: true,
+      cell: (w) => <span className="font-medium">{w.name}</span>,
+    },
+    {
+      key: "vintage",
+      header: "Vintage",
+      cell: (w) => (
+        <span className="tabular-nums">{w.vintage ?? "—"}</span>
+      ),
+    },
+    {
+      key: "source",
+      header: "Source",
+      cell: (w) => (
+        <Badge tone={w.source === "cellar" ? "info" : "neutral"}>
+          {w.source === "cellar" ? "Club cellar" : "Restaurant list"}
+        </Badge>
+      ),
+    },
+    {
+      key: "notes",
+      header: "Notes",
+      cell: (w) => (
+        <span className="text-muted-foreground">{w.notes ?? "—"}</span>
+      ),
+    },
+    {
+      key: "actions",
+      header: <span className="sr-only">Actions</span>,
+      headerClassName: "text-right",
+      className: "text-right",
+      primary: true,
+      cell: (w) => (
+        <form action={deleteWineAction.bind(null, slug, w.id)}>
+          <ConfirmSubmit
+            confirmTitle="Remove wine?"
+            confirmMessage={`Remove ${w.name} from the catalogue?`}
+            confirmLabel="Remove"
+            variant="destructive"
+            size="sm"
+          >
+            Remove
+          </ConfirmSubmit>
+        </form>
+      ),
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <ErrorBanner message={error} />
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">🍷 Wine</h1>
-        <p className="text-sm text-stone-500">
-          A lightweight catalogue — the club cellar plus restaurant-list picks.
-          Select wines for a specific lunch from that lunch&apos;s page. No
-          bottle counting in v1.
-        </p>
-      </div>
+      <PageHeader
+        title={
+          <span className="flex items-center gap-2.5">
+            <WineIcon className="size-7 text-gold" />
+            Wine cellar
+          </span>
+        }
+        description="A lightweight catalogue — the club cellar plus restaurant-list picks. Pick wines for a lunch from that lunch's page. No bottle counting in v1."
+      />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Add to the catalogue</CardTitle>
+          <CardTitle>Add to the catalogue</CardTitle>
         </CardHeader>
         <CardContent>
           <WineForm slug={slug} />
         </CardContent>
       </Card>
 
-      <div className="rounded-lg border bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Wine</TableHead>
-              <TableHead>Vintage</TableHead>
-              <TableHead className="hidden sm:table-cell">Source</TableHead>
-              <TableHead className="hidden md:table-cell">Notes</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {wines.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center text-stone-500 py-8">
-                  The cellar is empty — add your first wine above.
-                </TableCell>
-              </TableRow>
-            )}
-            {wines.map((w) => (
-              <TableRow key={w.id}>
-                <TableCell className="font-medium">{w.name}</TableCell>
-                <TableCell>{w.vintage ?? "—"}</TableCell>
-                <TableCell className="hidden sm:table-cell text-stone-600">
-                  {w.source === "cellar" ? "Club cellar" : "Restaurant list"}
-                </TableCell>
-                <TableCell className="hidden md:table-cell text-stone-600">
-                  {w.notes ?? "—"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <form action={deleteWineAction.bind(null, slug, w.id)}>
-                    <ConfirmSubmit
-                      confirmMessage={`Remove ${w.name} from the catalogue?`}
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-600"
-                    >
-                      Remove
-                    </ConfirmSubmit>
-                  </form>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataList
+        columns={columns}
+        rows={wines}
+        rowKey={(w) => w.id}
+        empty={
+          <EmptyState
+            icon={WineIcon}
+            title="The cellar is empty"
+            description="Add your first wine above — cellar bottles or restaurant-list picks."
+          />
+        }
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   requestPasswordResetAction,
   type FormState,
 } from "@/app/actions/auth";
+import { CircleCheckIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,9 +19,12 @@ export function ForgotForm() {
 
   if (state.success) {
     return (
-      <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-        If an account exists for that email, a reset link is on its way. Check
-        your inbox.
+      <p className="flex items-start gap-2 rounded-lg border border-success/30 bg-success/10 px-3 py-2 text-sm text-success">
+        <CircleCheckIcon className="mt-0.5 size-4 shrink-0" />
+        <span>
+          If an account exists for that email, a reset link is on its way.
+          Check your inbox.
+        </span>
       </p>
     );
   }
@@ -32,7 +36,7 @@ export function ForgotForm() {
         <Input id="email" name="email" type="email" autoComplete="email" required />
       </div>
       <FormError message={state.error} />
-      <Button type="submit" className="w-full" disabled={pending}>
+      <Button type="submit" className="w-full" loading={pending}>
         {pending ? "Sending…" : "Send reset link"}
       </Button>
     </form>

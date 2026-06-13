@@ -10,7 +10,7 @@ decisions as they're made.
 | **Language** | TypeScript end-to-end | One language across FE + server |
 | **Framework** | Next.js (App Router) | Full-stack — FE + server logic in one app |
 | **Backend** | Next.js Server Actions + Route Handlers | **No separate backend service** |
-| **UI** | Tailwind CSS + shadcn/ui | Modern, fast to build, responsive/mobile-first |
+| **UI** | Tailwind CSS v4 + shadcn/ui (base-ui) | "Editorial wine-cellar" design system, light + dark, mobile-first — see [Design system](#design-system-ui-2026-redesign) |
 | **Database** | Supabase (Postgres) | Also provides Auth, RLS, storage, edge functions |
 | **Auth** | Supabase Auth — **email + password only** (v1) | No social/magic-link for now |
 | **Transactional email** | Resend | App notifications (confirmations, reminders) |
@@ -84,8 +84,45 @@ changed/cancelled, password reset — plus a daily Vercel cron
 (`/api/cron/reminders`) for the ~2-days-before reminder. No email on release
 (per vision). Emails no-op gracefully when `RESEND_API_KEY` is unset.
 
+## Design system (UI, 2026 redesign)
+
+The front end is an **"editorial wine-cellar"** system (burgundy/oxblood +
+parchment/cream, Fraunces serif display + Geist body), full **light and dark**
+themes. Built front-end-only — no data-model/RLS/server-action changes. Full
+per-phase notes live in [`docs/completions/`](./completions/).
+
+- **Tokens, not hardcoded colors.** All color/elevation/motion is OKLCH CSS
+  variables in `app/globals.css` (`@theme inline`): semantic surfaces
+  (`background`/`card`/`primary`/`muted`/`accent`…), a `--gold` premium accent,
+  a status set (`success`/`warning`/`danger`/`neutral`/`info` + foregrounds)
+  shared by badges/dots/banners, two-tier `shadow-soft`/`shadow-lifted`
+  (warm-tinted, theme-aware), and motion tokens (`--ease-out-quint`,
+  `--duration-*`). A global `prefers-reduced-motion` guard collapses all motion.
+- **Theming.** `next-themes` (`class` strategy, `system` default) via
+  `components/theme-provider.tsx`; `ThemeToggle` in the nav and on the profile.
+- **Typography.** Fraunces (`--font-fraunces` → `--font-heading`) for display/
+  headings via `.text-display`/`.text-h1`/`.text-h2`/`.font-heading`; Geist Sans
+  body, Geist Mono for the restaurant export block.
+- **Primitives** (`components/ui/*`, base-ui based): refined Button (incl.
+  `loading`, `gold`), Card (`hover`), Badge (`tone` + `dot`), Table, Select,
+  Dialog, Skeleton — plus shared `PageHeader`, `EmptyState`, `SeatMeter`,
+  `DataList` (responsive table→cards), `ConfirmDialog`/`ConfirmSubmit` (the
+  `window.confirm` replacement), `LunchCard`, `AttendanceHistory`, `CopyButton`,
+  `AuthShell`, and a `sonner` toast helper (`lib/toast.ts`).
+- **Conventions.** Every in-app index page uses `PageHeader`; empties use
+  `EmptyState`; every confirm is a branded `ConfirmDialog`; in-place form
+  successes toast (`lib/use-success-toast.ts`); every `<select>` is the `Select`
+  primitive (zero native selects / `window.confirm` remain); data-heavy routes
+  have `loading.tsx` skeletons.
+
 ## Known v1 limitations
 - Cutoff datetimes are entered/displayed in UTC (no per-club timezone yet).
 - A user who is invited to a second club reuses their existing account and is
   activated immediately (no second invite email flow).
 - No public application/nomination flow (by design, v1).
+- Committee redirect/revalidate forms (lunch lifecycle, capacity/cutoff, venue
+  transitions, tastings) surface success via the revalidated UI rather than a
+  toast — toasts there would require changing the server actions (a redesign
+  non-goal). Errors still surface via `?error=` banners.
+- Brand favicon/OG image still use placeholders (metadata fields are set; a
+  designed asset is pending).

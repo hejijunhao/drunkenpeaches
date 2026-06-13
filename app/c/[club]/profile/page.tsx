@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
 import { getClubContext } from "@/lib/club-context";
-import { fmtDateShort } from "@/lib/format";
+import { fmtDateShort, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/status-badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
+import {
+  AttendanceHistory,
+  type AttendanceItem,
+} from "@/components/attendance-history";
 import { ProfileForm } from "./profile-form";
 
 export const metadata: Metadata = { title: "My profile" };
@@ -24,9 +30,9 @@ export default async function ProfilePage({
     .order("created_at", { ascending: false })
     .limit(30);
 
-  const attendance = (history ?? [])
+  const attendance: AttendanceItem[] = (history ?? [])
     .map((h) => ({
-      ...h,
+      raw: h,
       lunch: h.lunches as unknown as {
         id: string;
         title: string;
@@ -34,43 +40,59 @@ export default async function ProfilePage({
         status: string;
       } | null,
     }))
-    .filter((h) => h.lunch && h.status !== "cancelled");
+    .filter((h) => h.lunch && h.raw.status !== "cancelled")
+    .map((h) => ({
+      id: h.raw.id,
+      date: h.lunch!.lunch_date,
+      title: h.lunch!.title,
+      status: h.raw.status,
+      attended: h.raw.attended,
+    }));
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">My profile</h1>
-        <p className="text-sm text-stone-500">
-          {ctx.club.name} · member since {fmtDateShort(ctx.membership.joined_on)}
-          {ctx.membership.role === "committee" && " · committee"}
-          {ctx.membership.wine_master && " · 🍷 wine master"}
-        </p>
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar size="lg">
+          <AvatarFallback className="bg-primary/10 text-primary">
+            {initials(ctx.membership.full_name || ctx.membership.email)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="space-y-1.5">
+          <h1 className="text-h1 text-foreground">My profile</h1>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span>
+              {ctx.club.name} · member since{" "}
+              {fmtDateShort(ctx.membership.joined_on)}
+            </span>
+            {ctx.membership.role === "committee" ? (
+              <Badge variant="secondary">Committee</Badge>
+            ) : null}
+            {ctx.membership.wine_master ? (
+              <Badge tone="info">🍷 Wine Master</Badge>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <ProfileForm slug={slug} membership={ctx.membership} />
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">My lunch history</CardTitle>
+          <CardTitle>Appearance</CardTitle>
         </CardHeader>
-        <CardContent>
-          {attendance.length === 0 ? (
-            <p className="text-sm text-stone-500">No lunches yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {attendance.map((h) => (
-                <li key={h.id} className="text-sm flex items-center gap-2 flex-wrap">
-                  <span className="text-stone-500">
-                    {fmtDateShort(h.lunch!.lunch_date)}
-                  </span>
-                  <span className="font-medium">{h.lunch!.title}</span>
-                  <StatusBadge status={h.status} />
-                </li>
-              ))}
-            </ul>
-          )}
+        <CardContent className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">Theme</p>
+            <p className="text-xs text-muted-foreground">
+              Light, dark, or match your system.
+            </p>
+          </div>
+          <ThemeToggle />
         </CardContent>
       </Card>
+
+      <AttendanceHistory items={attendance} />
     </div>
   );
 }

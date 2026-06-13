@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import { LunchForm } from "../lunch-form";
+import { PageHeader } from "@/components/page-header";
 import type { Venue } from "@/lib/types";
 
 export const metadata: Metadata = { title: "New lunch" };
@@ -26,13 +27,11 @@ export default async function NewLunchPage({
     .order("name");
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New lunch</h1>
-        <p className="text-sm text-stone-500">
-          Book the restaurant first — capacity X comes from that booking.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="New lunch"
+        description="Book the restaurant first — capacity comes from that booking."
+      />
       <LunchForm
         slug={slug}
         venues={(venues ?? []) as Pick<Venue, "id" | "name" | "status" | "default_capacity">[]}
