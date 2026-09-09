@@ -1,5 +1,8 @@
 # Vision
 
+> Singapore-chapter baseline (gaps, roadmap, where this file conflicts with
+> the secretary’s notes): [plans/singapore-bsb-roadmap-2026.md](./plans/singapore-bsb-roadmap-2026.md).
+
 ## Origin
 
 I'm a member of a private members club — **Beefsteaks & Burgundy**, a gents' dining
