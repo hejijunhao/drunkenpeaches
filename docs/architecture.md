@@ -1,7 +1,8 @@
 # Architecture
 
 Living technical companion to [vision.md](./vision.md). Records stack and key technical
-decisions as they're made.
+decisions as they're made. Singapore product baseline (what to build next):
+[plans/singapore-bsb-roadmap-2026.md](./plans/singapore-bsb-roadmap-2026.md).
 
 ## Stack (decided)
 
