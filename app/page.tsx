@@ -40,12 +40,22 @@ export default async function LandingPage() {
       <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
           <BrandWordmark size="sm" />
-          <nav className="flex items-center gap-1 sm:gap-2">
+          <nav className="flex items-center gap-1">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+            <Button
+              variant="ghost"
+              size="sm"
+              nativeButton={false}
+              render={<Link href="/login" />}
+            >
               Members
             </Button>
-            <Button size="sm" render={<Link href="/signup" />}>
+            <Button
+              size="sm"
+              className="hidden sm:inline-flex"
+              nativeButton={false}
+              render={<Link href="/signup" />}
+            >
               Establish a chapter
             </Button>
           </nav>
@@ -65,13 +75,19 @@ export default async function LandingPage() {
             &amp; Burgundy.
           </p>
           <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button size="lg" className="w-full sm:w-auto" render={<Link href="/login" />}>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto"
+              nativeButton={false}
+              render={<Link href="/login" />}
+            >
               Members&apos; entrance
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="w-full sm:w-auto"
+              nativeButton={false}
               render={<Link href="/signup" />}
             >
               Establish a chapter
