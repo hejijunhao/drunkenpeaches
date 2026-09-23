@@ -6,7 +6,7 @@ import { LunchForm } from "../../lunch-form";
 import { PageHeader } from "@/components/page-header";
 import type { Lunch, Venue } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Edit lunch" };
+export const metadata: Metadata = { title: "Amend the luncheon" };
 
 export default async function EditLunchPage({
   params,
@@ -36,7 +36,7 @@ export default async function EditLunchPage({
   if (!lunch) notFound();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         kicker="Committee"
         title="Amend the luncheon"

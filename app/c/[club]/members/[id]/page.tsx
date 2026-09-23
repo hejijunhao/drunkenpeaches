@@ -13,7 +13,7 @@ import {
 } from "@/components/attendance-history";
 import { MemberEditForm } from "./member-edit-form";
 
-export const metadata: Metadata = { title: "Edit member" };
+export const metadata: Metadata = { title: "Member" };
 
 export default async function MemberDetailPage({
   params,
@@ -63,32 +63,36 @@ export default async function MemberDetailPage({
     }));
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-4">
-        <Avatar size="lg">
-          <AvatarFallback className="bg-primary/10 text-primary">
-            {initials(member.full_name || member.email)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-h1 text-foreground">
-              {member.full_name || member.email}
-            </h1>
-            <StatusBadge status={member.status} />
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>Member since {fmtDateShort(member.joined_on)}</span>
-            <Badge variant="secondary" className="capitalize">
-              {member.role}
-            </Badge>
-            {member.wine_master ? (
-              <Badge tone="info">Wine Master</Badge>
-            ) : null}
+    <div className="space-y-10">
+      <header className="space-y-6">
+        <div className="flex flex-wrap items-center gap-5">
+          <Avatar size="lg">
+            <AvatarFallback>
+              {initials(member.full_name || member.email)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 space-y-2.5">
+            <p className="club-kicker">Member since {fmtDateShort(member.joined_on)}</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <h1 className="text-h1 text-foreground">
+                {member.full_name || member.email}
+              </h1>
+              <span className="flex items-center gap-1.5">
+                <StatusBadge status={member.status} />
+                {member.role === "committee" ? (
+                  <Badge variant="outline">Committee</Badge>
+                ) : null}
+                {member.wine_master ? (
+                  <Badge variant="outline" className="border-gold/60 text-gold-foreground dark:text-gold">
+                    Wine Master
+                  </Badge>
+                ) : null}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+        <div className="club-rule-strong" />
+      </header>
 
       <MemberEditForm
         slug={slug}

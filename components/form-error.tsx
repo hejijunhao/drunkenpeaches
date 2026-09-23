@@ -2,7 +2,7 @@ import { TriangleAlertIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-/** Inline form error — token-driven destructive styling. */
+/** Inline form error. */
 export function FormError({
   message,
   className,
@@ -15,7 +15,7 @@ export function FormError({
     <p
       role="alert"
       className={cn(
-        "flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive",
+        "flex items-start gap-2.5 rounded-sm border border-destructive/30 bg-destructive/6 px-3 py-2.5 text-sm text-destructive",
         className
       )}
     >

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import {
   CalendarDaysIcon,
+  ChevronDownIcon,
   HomeIcon,
   LogOutIcon,
   SettingsIcon,
@@ -38,6 +39,10 @@ interface AppNavProps {
   isWineMaster: boolean;
 }
 
+/**
+ * The club's masthead. Desktop: seal + club name, small-cap links, the member.
+ * Phones: a bottom rail of four tabs and a "more" sheet.
+ */
 export function AppNav({
   clubSlug,
   clubName,
@@ -52,7 +57,7 @@ export function AppNav({
 
   const primary = [
     { href: `${base}/dashboard`, label: "Home", icon: HomeIcon },
-    { href: `${base}/lunches`, label: "Lunches", icon: CalendarDaysIcon },
+    { href: `${base}/lunches`, label: "Luncheons", icon: CalendarDaysIcon },
     { href: `${base}/members`, label: "Members", icon: UsersIcon },
   ];
 
@@ -87,33 +92,37 @@ export function AppNav({
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 md:h-16 md:px-6">
+      <header className="sticky top-0 z-40 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-4 md:h-[4.25rem] md:px-6">
           <Link
             href={`${base}/dashboard`}
-            className="flex min-w-0 items-center gap-2.5"
+            className="flex min-w-0 items-center gap-3"
           >
-            <BrandMark size="sm" />
-            <span className="font-heading truncate text-base tracking-tight text-foreground md:text-lg">
+            <BrandMark size="sm" className="text-primary md:size-7" />
+            <span className="font-heading truncate text-[1.05rem] leading-none tracking-[-0.01em] text-foreground md:text-[1.2rem]">
               {clubName}
             </span>
           </Link>
 
-          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Club">
-            {desktopLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={cn(
-                  "px-3 py-2 text-sm transition-colors duration-(--duration-micro)",
-                  isActive(l.href)
-                    ? "font-medium text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {l.label}
-              </Link>
-            ))}
+          <nav className="hidden items-center gap-7 md:flex" aria-label="Club">
+            {desktopLinks.map((l) => {
+              const active = isActive(l.href);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "relative py-2 text-[0.6875rem] font-medium tracking-[0.16em] uppercase transition-colors duration-(--duration-micro)",
+                    active
+                      ? "text-foreground after:absolute after:inset-x-0 after:bottom-0.5 after:h-px after:bg-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
           </nav>
 
           <div className="hidden items-center gap-1 md:flex">
@@ -121,22 +130,29 @@ export function AppNav({
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button variant="ghost" size="sm" className="gap-2 pl-1.5" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2.5 pr-2 pl-1.5"
+                  />
                 }
               >
                 <Avatar size="sm">
-                  <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
-                    {initials(memberName)}
-                  </AvatarFallback>
+                  <AvatarFallback>{initials(memberName)}</AvatarFallback>
                 </Avatar>
-                <span className="max-w-32 truncate">
+                <span className="max-w-36 truncate text-sm font-normal">
                   {memberName || "Account"}
                 </span>
+                <ChevronDownIcon className="size-3.5 text-muted-foreground" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-60">
-                <div className="px-2 py-1.5">
-                  <p className="truncate text-sm font-medium">{memberName}</p>
-                  <p className="text-xs text-muted-foreground">{roleLabel}</p>
+              <DropdownMenuContent align="end" className="w-64">
+                <div className="px-2 pt-2 pb-2.5">
+                  <p className="font-heading truncate text-[1.05rem] leading-tight text-foreground">
+                    {memberName}
+                  </p>
+                  <p className="club-kicker mt-1.5 text-[0.625rem]">
+                    {roleLabel}
+                  </p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem render={<Link href={`${base}/profile`} />}>
@@ -151,12 +167,13 @@ export function AppNav({
             </DropdownMenu>
           </div>
         </div>
+        <div className="club-rule-double" />
       </header>
 
-      {/* Mobile bottom tabs */}
+      {/* Phone rail */}
       <nav
         aria-label="Club"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/85 md:hidden"
       >
         <ul className="grid h-16 grid-cols-4">
           {primary.map((l) => {
@@ -166,12 +183,16 @@ export function AppNav({
                 <Link
                   href={l.href}
                   onClick={() => setMoreOpen(false)}
+                  aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex h-full min-h-11 flex-col items-center justify-center gap-1 text-[0.6875rem] tracking-wide",
+                    "flex h-full min-h-11 flex-col items-center justify-center gap-1.5 text-[0.625rem] font-medium tracking-[0.14em] uppercase transition-colors",
                     active ? "text-primary" : "text-muted-foreground"
                   )}
                 >
-                  <l.icon className="size-5" strokeWidth={active ? 2.1 : 1.6} />
+                  <l.icon
+                    className="size-[1.15rem]"
+                    strokeWidth={active ? 1.9 : 1.5}
+                  />
                   {l.label}
                 </Link>
               </li>
@@ -184,16 +205,16 @@ export function AppNav({
               aria-label="More"
               onClick={() => setMoreOpen((o) => !o)}
               className={cn(
-                "flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 text-[0.6875rem] tracking-wide",
+                "flex h-full min-h-11 w-full flex-col items-center justify-center gap-1.5 text-[0.625rem] font-medium tracking-[0.14em] uppercase transition-colors",
                 moreOpen || moreActive ? "text-primary" : "text-muted-foreground"
               )}
             >
               {moreOpen ? (
-                <XIcon className="size-5" strokeWidth={2.1} />
+                <XIcon className="size-[1.15rem]" strokeWidth={1.9} />
               ) : (
                 <EllipsisIcon
-                  className="size-5"
-                  strokeWidth={moreActive ? 2.1 : 1.6}
+                  className="size-[1.15rem]"
+                  strokeWidth={moreActive ? 1.9 : 1.5}
                 />
               )}
               More
@@ -207,35 +228,47 @@ export function AppNav({
           <button
             type="button"
             aria-label="Dismiss"
-            className="absolute inset-0 bg-foreground/25"
+            className="absolute inset-0 bg-foreground/30 duration-(--duration-default) animate-in fade-in-0"
             onClick={() => setMoreOpen(false)}
           />
-          <div className="absolute inset-x-0 bottom-16 space-y-1 border-t border-border bg-background px-4 pb-3 pt-3 shadow-lifted">
-            <p className="club-kicker px-1 pb-2">{roleLabel}</p>
-            {moreLinks.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setMoreOpen(false)}
-                className={cn(
-                  "flex min-h-12 items-center gap-3 px-1 text-[0.95rem]",
-                  isActive(l.href)
-                    ? "font-medium text-primary"
-                    : "text-foreground"
-                )}
-              >
-                <l.icon className="size-4 text-muted-foreground" />
-                {l.label}
-              </Link>
-            ))}
-            <div className="flex min-h-12 items-center justify-between px-1">
-              <span className="text-[0.95rem]">Appearance</span>
-              <ThemeToggle />
+          <div className="absolute inset-x-0 bottom-16 border-t border-border bg-background px-5 pt-5 pb-3 shadow-lifted duration-(--duration-overlay) ease-(--ease-out-quint) animate-in slide-in-from-bottom-4 fade-in-0">
+            <div className="flex items-center gap-3 pb-3">
+              <Avatar size="sm">
+                <AvatarFallback>{initials(memberName)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                <p className="font-heading truncate text-[1.05rem] leading-tight">
+                  {memberName}
+                </p>
+                <p className="club-kicker mt-1 text-[0.625rem]">{roleLabel}</p>
+              </div>
+            </div>
+            <div className="divide-y divide-border border-y border-border">
+              {moreLinks.map((l) => (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    "flex min-h-12 items-center gap-3 text-[0.95rem]",
+                    isActive(l.href)
+                      ? "text-primary"
+                      : "text-foreground"
+                  )}
+                >
+                  <l.icon className="size-4 text-muted-foreground" />
+                  {l.label}
+                </Link>
+              ))}
+              <div className="flex min-h-12 items-center justify-between">
+                <span className="text-[0.95rem]">Appearance</span>
+                <ThemeToggle />
+              </div>
             </div>
             <button
               type="button"
               onClick={submitSignout}
-              className="flex min-h-12 w-full items-center gap-3 px-1 text-[0.95rem] text-destructive"
+              className="flex min-h-12 w-full items-center gap-3 text-[0.95rem] text-destructive"
             >
               <LogOutIcon className="size-4" />
               Sign out

@@ -16,11 +16,11 @@ export default async function SettingsPage({
   if (!ctx.isCommittee) notFound();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         kicker="Committee"
         title="Club settings"
-        description="Identity, the list, and guest policy for this chapter."
+        description="The chapter's name, when the list closes, and the guest policy."
       />
       <SettingsForm slug={slug} club={ctx.club} />
     </div>

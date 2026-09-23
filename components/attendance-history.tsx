@@ -1,4 +1,4 @@
-import { fmtDateShort } from "@/lib/format";
+import { dateParts } from "@/lib/format";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "@/components/status-badge";
@@ -11,7 +11,7 @@ export interface AttendanceItem {
   attended: boolean | null;
 }
 
-/** Attendance timeline — shared by member-detail and the profile screen. */
+/** The member's record in the book — shared by member detail and the profile. */
 export function AttendanceHistory({ items }: { items: AttendanceItem[] }) {
   return (
     <Card>
@@ -20,31 +20,40 @@ export function AttendanceHistory({ items }: { items: AttendanceItem[] }) {
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No luncheons recorded.</p>
+          <p className="text-sm text-muted-foreground">
+            No luncheons recorded yet.
+          </p>
         ) : (
-          <ul className="space-y-3">
-            {items.map((h) => (
-              <li
-                key={h.id}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 border-l-2 border-border pl-3"
-              >
-                <span className="text-xs tabular-nums text-muted-foreground">
-                  {fmtDateShort(h.date)}
-                </span>
-                <span className="text-sm font-medium">{h.title}</span>
-                <StatusBadge status={h.status} />
-                {h.attended === true ? (
-                  <Badge tone="success" dot>
-                    attended
-                  </Badge>
-                ) : null}
-                {h.attended === false ? (
-                  <Badge tone="danger" dot>
-                    no-show
-                  </Badge>
-                ) : null}
-              </li>
-            ))}
+          <ul className="divide-y divide-border border-y border-border">
+            {items.map((h) => {
+              const d = dateParts(h.date);
+              return (
+                <li
+                  key={h.id}
+                  className="flex flex-wrap items-center gap-x-4 gap-y-1.5 py-3"
+                >
+                  <span className="text-numeral w-24 shrink-0 text-sm text-muted-foreground">
+                    {d.day} {d.month} {d.year}
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm text-foreground">
+                    {h.title}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <StatusBadge status={h.status} />
+                    {h.attended === true ? (
+                      <Badge tone="success" dot>
+                        Present
+                      </Badge>
+                    ) : null}
+                    {h.attended === false ? (
+                      <Badge tone="danger" dot>
+                        No-show
+                      </Badge>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>

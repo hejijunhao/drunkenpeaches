@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { differenceInCalendarDays, format, parseISO } from "date-fns";
 
 export function fmtDate(date: string) {
   return format(parseISO(date), "EEEE d MMMM yyyy");
@@ -14,6 +14,36 @@ export function fmtTime(time: string) {
 
 export function fmtDateTime(iso: string) {
   return format(new Date(iso), "EEE d MMM yyyy, HH:mm");
+}
+
+/** Pieces of a date for the calendar-tile treatment on lunch cards. */
+export function dateParts(date: string) {
+  const d = parseISO(date);
+  return {
+    weekday: format(d, "EEE"),
+    day: format(d, "d"),
+    month: format(d, "MMM"),
+    year: format(d, "yyyy"),
+  };
+}
+
+/** Whole calendar days from today to `date` (negative when past). */
+export function daysUntil(date: string) {
+  return differenceInCalendarDays(parseISO(date), new Date());
+}
+
+/** "in 12 days", "tomorrow", "today", "3 days ago". */
+export function relativeDays(date: string) {
+  const n = daysUntil(date);
+  if (n === 0) return "today";
+  if (n === 1) return "tomorrow";
+  if (n === -1) return "yesterday";
+  if (n > 1) return `in ${n} days`;
+  return `${-n} days ago`;
+}
+
+export function firstName(name: string) {
+  return name.trim().split(/\s+/)[0] ?? "";
 }
 
 /** Up to two uppercase initials from a name, for avatar fallbacks. */

@@ -11,7 +11,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { FormError } from "@/components/form-error";
 import { StatusBadge } from "@/components/status-badge";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -59,65 +65,55 @@ export function SignupCard({
 
   useSuccessToast(signupPending, signupState.error, "Your name is on the list");
   useSuccessToast(guestPending, guestState.error, "Guests updated");
-  useSuccessToast(cancelPending, cancelState.error, "Your place was withdrawn");
+  useSuccessToast(cancelPending, cancelState.error, "Your name has been withdrawn");
 
   if (cutoffPassed) {
     return (
-      <Card className="border-warning/30 bg-warning/5">
-        <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
-          <LockIcon className="mt-0.5 size-4 shrink-0 text-warning" />
-          <p>
-            The list is closed —{" "}
-            {mySignup
-              ? "your place is confirmed. Write to the committee if you can no longer attend."
-              : "write to the committee if you still wish to attend."}
-            {mySignup ? (
-              <span className="ml-2 inline-flex align-middle">
-                <StatusBadge status={mySignup.status} />
-              </span>
-            ) : null}
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex items-start gap-3 rounded-lg border border-border bg-card/60 px-5 py-4 text-sm text-muted-foreground">
+        <LockIcon className="mt-0.5 size-4 shrink-0" />
+        <p>
+          The list is closed.{" "}
+          {mySignup
+            ? "Your place stands. Write to the committee if you can no longer attend."
+            : "Write to the committee if you still wish to attend."}
+          {mySignup ? (
+            <span className="ml-2 inline-flex align-middle">
+              <StatusBadge status={mySignup.status} />
+            </span>
+          ) : null}
+        </p>
+      </div>
     );
   }
 
   if (mySignup) {
     const confirmed = mySignup.status === "confirmed";
     return (
-      <Card className={confirmed ? "border-success/30" : "border-warning/30"}>
+      <Card className="club-notice">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {confirmed ? "Your name is on the list" : "You are on the waitlist"}
+          <CardTitle serif className="flex flex-wrap items-center gap-3">
+            {confirmed ? "Your name is on the list." : "You are waiting for a place."}
             <StatusBadge status={mySignup.status} />
           </CardTitle>
+          <CardDescription>
+            {confirmed
+              ? "We look forward to seeing you."
+              : "Should a place come free, it is offered to the first name waiting, and you will be written to."}
+            {mySignup.guest_count > 0
+              ? ` Bringing ${mySignup.guest_count} guest${
+                  mySignup.guest_count > 1 ? "s" : ""
+                }${mySignup.guest_names ? ` — ${mySignup.guest_names}` : ""}.`
+              : ""}
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {mySignup.guest_count > 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Bringing {mySignup.guest_count} guest
-              {mySignup.guest_count > 1 ? "s" : ""}
-              {mySignup.guest_names ? ` — ${mySignup.guest_names}` : ""}.
-            </p>
-          ) : null}
-
-          {guestsAllowed && !editingGuests ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setEditingGuests(true)}
-            >
-              Change guests
-            </Button>
-          ) : null}
-
           {guestsAllowed && editingGuests ? (
             <form
               action={guestForm}
-              className="space-y-3 rounded-xl border border-border bg-muted/40 p-4"
+              className="space-y-4 rounded-sm border border-border bg-background p-4"
             >
               <div className="space-y-2">
-                <Label htmlFor="guestCount">Guests (max {maxGuests})</Label>
+                <Label htmlFor="guestCount">Guests (up to {maxGuests})</Label>
                 <Input
                   id="guestCount"
                   name="guestCount"
@@ -160,19 +156,33 @@ export function SignupCard({
           <form ref={cancelFormRef} action={cancelForm}>
             <FormError message={cancelState.error} />
           </form>
-          <Button
-            variant="destructive"
-            loading={cancelPending}
-            onClick={() => setConfirmCancel(true)}
-          >
-            Withdraw my name
-          </Button>
+
+          <div className="flex flex-wrap gap-2">
+            {guestsAllowed && !editingGuests ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditingGuests(true)}
+              >
+                Change guests
+              </Button>
+            ) : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-destructive"
+              loading={cancelPending}
+              onClick={() => setConfirmCancel(true)}
+            >
+              Withdraw my name
+            </Button>
+          </div>
           <ConfirmDialog
             open={confirmCancel}
             onOpenChange={setConfirmCancel}
             destructive
             title="Withdraw your name?"
-            description="If the table is full, the next member on the waitlist is offered the place and written to."
+            description="If the table is full, the first name waiting is offered your place and written to."
             confirmLabel="Withdraw"
             cancelLabel="Keep my place"
             onConfirm={() => {
@@ -188,18 +198,22 @@ export function SignupCard({
   const willWaitlist = seatsLeft < 1 + guestCount;
 
   return (
-    <Card>
+    <Card className="club-notice">
       <CardHeader>
-        <CardTitle>Add your name</CardTitle>
+        <CardTitle serif>Add your name</CardTitle>
+        <CardDescription>
+          Places are given in order of name.
+          {guestsAllowed
+            ? " Guests occupy places from the same booking."
+            : ""}
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <form action={signupForm} className="space-y-4">
+        <form action={signupForm} className="space-y-5">
           {guestsAllowed ? (
-            <>
+            <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
               <div className="space-y-2">
-                <Label htmlFor="guestCount">
-                  Guests (max {maxGuests})
-                </Label>
+                <Label htmlFor="guestCount">Guests (up to {maxGuests})</Label>
                 <Input
                   id="guestCount"
                   name="guestCount"
@@ -210,12 +224,9 @@ export function SignupCard({
                   value={guestCount}
                   onChange={(e) => setGuestCount(Number(e.target.value) || 0)}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Guests occupy seats from the same booking.
-                </p>
               </div>
               {guestCount > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2 duration-(--duration-default) ease-(--ease-out-quint) animate-in fade-in-0">
                   <Label htmlFor="guestNames">Guest names</Label>
                   <Input
                     id="guestNames"
@@ -224,23 +235,25 @@ export function SignupCard({
                   />
                 </div>
               ) : null}
-            </>
+            </div>
           ) : null}
           <FormError message={signupState.error} />
-          <Button
-            type="submit"
-            loading={signupPending}
-            variant={willWaitlist ? "outline" : "default"}
-            className="w-full sm:w-auto"
-          >
-            {willWaitlist ? "Join the waitlist" : "Add my name"}
-          </Button>
-          {willWaitlist ? (
-            <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
-              The table is full. You will be offered a place (and written to)
-              should one become free.
-            </p>
-          ) : null}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button
+              type="submit"
+              loading={signupPending}
+              variant={willWaitlist ? "outline" : "default"}
+              className="w-full sm:w-auto"
+            >
+              {willWaitlist ? "Join the waiting list" : "Add my name"}
+            </Button>
+            {willWaitlist ? (
+              <p className="text-sm text-muted-foreground">
+                The table is full. You will be offered a place, and written to,
+                should one come free.
+              </p>
+            ) : null}
+          </div>
         </form>
       </CardContent>
     </Card>

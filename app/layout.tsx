@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
+import { Geist_Mono, Hanken_Grotesk, Newsreader } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const sourceSans = Source_Sans_3({
-  variable: "--font-source-sans",
+const hanken = Hanken_Grotesk({
+  variable: "--font-hanken",
   subsets: ["latin"],
   display: "swap",
 });
@@ -20,10 +20,12 @@ const newsreader = Newsreader({
   variable: "--font-newsreader",
   subsets: ["latin"],
   display: "swap",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
 const description =
-  "The members' book for private dining clubs — luncheons, the list, the cellar. Invitation only.";
+  "The members' book for private dining clubs — luncheons, the list, the cellar. By invitation.";
 
 export const metadata: Metadata = {
   title: {
@@ -58,8 +60,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4efe4" },
-    { media: "(prefers-color-scheme: dark)", color: "#1c1614" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f1e7" },
+    { media: "(prefers-color-scheme: dark)", color: "#1c1715" },
   ],
 };
 
@@ -72,7 +74,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${sourceSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
+      className={`${hanken.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <ThemeProvider

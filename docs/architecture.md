@@ -11,7 +11,7 @@ decisions as they're made. Singapore product baseline (what to build next):
 | **Language** | TypeScript end-to-end | One language across FE + server |
 | **Framework** | Next.js (App Router) | Full-stack — FE + server logic in one app |
 | **Backend** | Next.js Server Actions + Route Handlers | **No separate backend service** |
-| **UI** | Tailwind CSS v4 + shadcn/ui (base-ui) | "Editorial wine-cellar" design system, light + dark, mobile-first — see [Design system](#design-system-ui-2026-redesign) |
+| **UI** | Tailwind CSS v4 + shadcn/ui (base-ui) | "Club stationery" design system, light + dark, mobile-first — see [Design system](#design-system-ui-2026) |
 | **Database** | Supabase (Postgres) | Also provides Auth, RLS, storage, edge functions |
 | **Auth** | Supabase Auth — **email + password only** (v1) | No social/magic-link for now |
 | **Transactional email** | Resend | App notifications (confirmations, reminders) |
@@ -85,36 +85,48 @@ changed/cancelled, password reset — plus a daily Vercel cron
 (`/api/cron/reminders`) for the ~2-days-before reminder. No email on release
 (per vision). Emails no-op gracefully when `RESEND_API_KEY` is unset.
 
-## Design system (UI, 2026 redesign)
+## Design system (UI, 2026)
 
-The front end is an **"editorial wine-cellar"** system (burgundy/oxblood +
-parchment/cream, Fraunces serif display + Geist body), full **light and dark**
-themes. Built front-end-only — no data-model/RLS/server-action changes. Full
-per-phase notes live in [`docs/completions/`](./completions/).
+The front end is **club stationery**: laid-cream paper, oxblood ink, a little
+brass, hairline rules, an engraved peach seal — with full **light and dark**
+themes. Front-end only — no data-model/RLS/server-action changes. History in
+[`docs/CHANGELOG.md`](./CHANGELOG.md) (0.2.0 → 0.4.0) and
+[`docs/completions/`](./completions/).
 
 - **Tokens, not hardcoded colors.** All color/elevation/motion is OKLCH CSS
   variables in `app/globals.css` (`@theme inline`): semantic surfaces
-  (`background`/`card`/`primary`/`muted`/`accent`…), a `--gold` premium accent,
-  a status set (`success`/`warning`/`danger`/`neutral`/`info` + foregrounds)
-  shared by badges/dots/banners, two-tier `shadow-soft`/`shadow-lifted`
-  (warm-tinted, theme-aware), and motion tokens (`--ease-out-quint`,
-  `--duration-*`). A global `prefers-reduced-motion` guard collapses all motion.
+  (`background`/`card`/`primary`/`muted`/`accent`…), a `--gold` brass accent
+  (hairlines and text, never a fill), a status set (`success`/`warning`/
+  `danger`/`neutral`/`info`), `--radius` 0.25rem, `shadow-soft` (a hairline at
+  rest) / `shadow-lifted` (overlays only), motion tokens, and a global
+  `prefers-reduced-motion` guard.
 - **Theming.** `next-themes` (`class` strategy, `system` default) via
-  `components/theme-provider.tsx`; `ThemeToggle` in the nav and on the profile.
-- **Typography.** Fraunces (`--font-fraunces` → `--font-heading`) for display/
-  headings via `.text-display`/`.text-h1`/`.text-h2`/`.font-heading`; Geist Sans
-  body, Geist Mono for the restaurant export block.
-- **Primitives** (`components/ui/*`, base-ui based): refined Button (incl.
-  `loading`, `gold`), Card (`hover`), Badge (`tone` + `dot`), Table, Select,
-  Dialog, Skeleton — plus shared `PageHeader`, `EmptyState`, `SeatMeter`,
-  `DataList` (responsive table→cards), `ConfirmDialog`/`ConfirmSubmit` (the
-  `window.confirm` replacement), `LunchCard`, `AttendanceHistory`, `CopyButton`,
-  `AuthShell`, and a `sonner` toast helper (`lib/toast.ts`).
-- **Conventions.** Every in-app index page uses `PageHeader`; empties use
-  `EmptyState`; every confirm is a branded `ConfirmDialog`; in-place form
-  successes toast (`lib/use-success-toast.ts`); every `<select>` is the `Select`
-  primitive (zero native selects / `window.confirm` remain); data-heavy routes
-  have `loading.tsx` skeletons.
+  `components/theme-provider.tsx`; `ThemeToggle` in the masthead and profile.
+- **Typography.** Newsreader (`--font-newsreader` → `--font-heading`, with
+  `opsz` and italics) for titles, numerals and asides via `.text-display`,
+  `.text-h1/.h2/.h3`, `.text-numeral`, `.text-aside`; **Hanken Grotesk** for
+  the interface; Geist Mono for the restaurant export block. Small-cap labels
+  everywhere via `.club-kicker` (also the `Label` and table-head style).
+- **Brand.** `components/brand-mark.tsx` — the seal (`BrandMark`, sizes `xs`
+  → `hero`, inherits `currentColor`) and the wordmark (`BrandWordmark`,
+  *Drunken* in italic). In-club chrome shows the club's name beside the seal.
+- **Primitives** (`components/ui/*`, base-ui): Button (`loading`, brass
+  `gold`), Card (hairline; `CardTitle` is small caps, `serif` for statements),
+  Badge (a stamp; `tone` + `dot`), Input/Textarea/Select/Label, Table (ruled
+  ledger), Dialog, Avatar (roundel), Skeleton.
+- **Shared**: `PageHeader` (rule beneath), `SectionHeading` + `RuleLabel`,
+  `FormSection`/`FormFooter` (two-column ruled forms), `LunchCard` (calendar
+  tile), `SeatMeter`, `StatusBadge` (+ `statusLabel`), `EmptyState`,
+  `DataList` (table → ruled entries on phones), `ConfirmDialog`/`ConfirmSubmit`,
+  `AttendanceHistory`, `CopyButton`, `AuthShell`, `PageHeaderSkeleton`/
+  `RowsSkeleton`, and `sonner` toasts (`lib/toast.ts`).
+- **Conventions.** Every in-app index page opens with `PageHeader`; detail
+  pages use the same kicker / serif title / rule pattern; committee-only areas
+  sit under a `RuleLabel`; long forms use `FormSection`; empties use
+  `EmptyState`; every confirm is a `ConfirmDialog`; in-place form successes
+  toast; every `<select>` is the `Select` primitive; data routes have
+  `loading.tsx` skeletons. Status words are the club's (Open, Held, Waiting,
+  Declined) via `StatusBadge`.
 
 ## Known v1 limitations
 - Cutoff datetimes are entered/displayed in UTC (no per-club timezone yet).

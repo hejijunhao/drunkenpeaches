@@ -1,27 +1,41 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ChevronDownIcon, MapPinIcon, UsersIcon } from "lucide-react";
+import { ChevronDownIcon } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import type { Venue } from "@/lib/types";
-import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
-import { EmptyState } from "@/components/empty-state";
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/error-banner";
 import { AddVenueDialog } from "./add-venue-dialog";
 
 export const metadata: Metadata = { title: "Venues" };
 
-const STAGES: { status: Venue["status"]; title: string; hint: string }[] = [
-  { status: "candidate", title: "Candidates", hint: "Houses under consideration" },
+const STAGES: {
+  status: Venue["status"];
+  numeral: string;
+  title: string;
+  hint: string;
+}[] = [
+  {
+    status: "candidate",
+    numeral: "I",
+    title: "Candidates",
+    hint: "Houses under consideration",
+  },
   {
     status: "tasting",
-    title: "Committee tasting",
-    hint: "Visit arranged or recorded",
+    numeral: "II",
+    title: "Tasting",
+    hint: "A committee visit arranged or recorded",
   },
-  { status: "approved", title: "Approved", hint: "Ready for a luncheon" },
+  {
+    status: "approved",
+    numeral: "III",
+    title: "Approved",
+    hint: "Ready for a luncheon",
+  },
 ];
 
 export default async function VenuesPage({
@@ -48,7 +62,7 @@ export default async function VenuesPage({
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <ErrorBanner message={error} />
       <PageHeader
         kicker="Back of house"
@@ -58,19 +72,22 @@ export default async function VenuesPage({
         <AddVenueDialog slug={slug} />
       </PageHeader>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-10 md:grid-cols-3 md:gap-8">
         {STAGES.map((stage) => {
           const inStage = venues.filter((v) => v.status === stage.status);
           return (
-            <div key={stage.status} className="space-y-3">
-              <div className="flex items-baseline justify-between gap-2 border-b border-border pb-2">
+            <section key={stage.status} className="space-y-4">
+              <div className="flex items-end justify-between gap-3 border-b border-border pb-3">
                 <div>
-                  <h2 className="font-heading text-base font-medium text-foreground">
-                    {stage.title}
-                  </h2>
-                  <p className="text-xs text-muted-foreground">{stage.hint}</p>
+                  <p className="text-numeral text-[1.25rem] leading-none text-primary">
+                    {stage.numeral}
+                  </p>
+                  <h2 className="text-h2 mt-2 text-foreground">{stage.title}</h2>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {stage.hint}
+                  </p>
                 </div>
-                <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground tabular-nums">
+                <span className="text-numeral text-[1.25rem] text-muted-foreground">
                   {inStage.length}
                 </span>
               </div>
@@ -79,48 +96,50 @@ export default async function VenuesPage({
                   <Link
                     key={v.id}
                     href={`/c/${slug}/venues/${v.id}`}
-                    className="block"
+                    className="block rounded-lg border border-border bg-card p-4 transition-colors duration-(--duration-default) hover:border-foreground/40"
                   >
-                    <Card hover className="gap-2 p-4">
-                      <p className="font-heading font-medium text-foreground">
-                        {v.name}
+                    <p className="text-h3 text-foreground">{v.name}</p>
+                    {v.address ? (
+                      <p className="mt-1 truncate text-sm text-muted-foreground">
+                        {v.address}
                       </p>
-                      {v.address ? (
-                        <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                          <MapPinIcon className="size-3.5 shrink-0" />
-                          {v.address}
-                        </p>
-                      ) : null}
-                      {v.default_capacity ? (
-                        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <UsersIcon className="size-3.5 shrink-0" />
-                          room for ~{v.default_capacity}
-                        </p>
-                      ) : null}
-                    </Card>
+                    ) : null}
+                    {v.default_capacity ? (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Private room for about{" "}
+                        <span className="text-numeral text-sm text-foreground">
+                          {v.default_capacity}
+                        </span>
+                      </p>
+                    ) : null}
                   </Link>
                 ))}
                 {inStage.length === 0 ? (
-                  <EmptyState title="None at present" className="px-4 py-6" />
+                  <p className="text-aside py-3 text-[0.95rem] text-muted-foreground">
+                    None at present.
+                  </p>
                 ) : null}
               </div>
-            </div>
+            </section>
           );
         })}
       </div>
 
       {retired.length > 0 ? (
-        <details className="group rounded-2xl border border-border bg-card">
-          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground">
-            Rejected &amp; archived ({retired.length})
+        <details className="group border-y border-border">
+          <summary className="flex cursor-pointer list-none items-center justify-between py-3 text-sm text-muted-foreground">
+            <span>
+              Declined &amp; archived{" "}
+              <span className="text-numeral ml-1 text-base">{retired.length}</span>
+            </span>
             <ChevronDownIcon className="size-4 transition-transform group-open:rotate-180" />
           </summary>
-          <div className="flex flex-wrap gap-2 border-t border-border p-4">
+          <div className="flex flex-wrap gap-2 border-t border-border py-4">
             {retired.map((v) => (
               <Link
                 key={v.id}
                 href={`/c/${slug}/venues/${v.id}`}
-                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:bg-accent"
+                className="inline-flex items-center gap-2 rounded-sm border border-border px-3 py-1.5 text-sm transition-colors hover:border-foreground/40"
               >
                 {v.name}
                 <StatusBadge status={v.status} />

@@ -36,8 +36,8 @@ interface DataListProps<T> {
 }
 
 /**
- * Responsive table: a real `<table>` at `sm`+ and stacked cards below it, so no
- * data is ever hidden on a phone. Replaces the responsive-hide column pattern.
+ * Responsive ledger: a ruled `<table>` at `sm`+ and stacked entries below it,
+ * so no data is hidden on a phone.
  */
 export function DataList<T>({
   columns,
@@ -54,7 +54,7 @@ export function DataList<T>({
       <div className="hidden sm:block">
         <Table className={className}>
           <TableHeader>
-            <TableRow>
+            <TableRow className="hover:bg-transparent">
               {columns.map((c) => (
                 <TableHead key={c.key} className={c.headerClassName}>
                   {c.header}
@@ -76,14 +76,11 @@ export function DataList<T>({
         </Table>
       </div>
 
-      {/* Mobile: stacked cards */}
-      <div className="grid gap-3 sm:hidden">
+      {/* Mobile: stacked entries */}
+      <div className="divide-y divide-border border-y border-border sm:hidden">
         {rows.map((row) => (
-          <div
-            key={rowKey(row)}
-            className="rounded-lg border border-border bg-card p-4 shadow-soft"
-          >
-            <dl className="grid gap-2">
+          <div key={rowKey(row)} className="py-4">
+            <dl className="grid gap-2.5">
               {columns.map((c) => (
                 <div
                   key={c.key}
@@ -93,14 +90,14 @@ export function DataList<T>({
                   )}
                 >
                   {!c.primary ? (
-                    <dt className="shrink-0 text-xs font-medium text-muted-foreground">
+                    <dt className="shrink-0 pt-0.5 text-[0.625rem] font-medium tracking-[0.14em] text-muted-foreground uppercase">
                       {c.header}
                     </dt>
                   ) : null}
                   <dd
                     className={cn(
                       "text-sm",
-                      c.primary ? "w-full font-medium" : "text-right"
+                      c.primary ? "w-full" : "text-right"
                     )}
                   >
                     {c.cell(row)}

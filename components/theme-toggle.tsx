@@ -11,14 +11,20 @@ import { Button } from "@/components/ui/button";
  * the correct one based on the `.dark` class on <html>, so there is no
  * hydration mismatch and no mount-gating state.
  */
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({
+  className,
+  size = "icon-sm",
+}: {
+  className?: string;
+  size?: "icon" | "icon-sm";
+}) {
   const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <Button
       type="button"
       variant="ghost"
-      size="icon"
+      size={size}
       aria-label="Toggle theme"
       className={className}
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}

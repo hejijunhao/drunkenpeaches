@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { FormError } from "@/components/form-error";
 import { ConfirmDialog } from "@/components/confirm-dialog";
+import { FormFooter, FormSection } from "@/components/form-section";
 
 const STATUS_LABELS: Record<MembershipStatus, string> = {
   invited: "Invited (pending)",
@@ -50,127 +51,146 @@ export function MemberEditForm({
 
   return (
     <>
-      <form ref={formRef} action={formAction} className="max-w-2xl space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="fullName">Name</Label>
-          <Input
-            id="fullName"
-            name="fullName"
-            defaultValue={member.full_name}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Email</Label>
-          <div className="flex h-9 items-center rounded-lg border border-border bg-muted/50 px-3 text-sm text-muted-foreground">
-            {member.email}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Email is the member&apos;s login and can&apos;t be changed here.
-          </p>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone</Label>
-            <Input id="phone" name="phone" defaultValue={member.phone ?? ""} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="joinedOn">Joined on</Label>
-            <Input
-              id="joinedOn"
-              name="joinedOn"
-              type="date"
-              defaultValue={member.joined_on}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="dietary">Dietary preferences</Label>
-          <Textarea
-            id="dietary"
-            name="dietary"
-            rows={2}
-            defaultValue={member.dietary_notes ?? ""}
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <Select
-              value={role}
-              onValueChange={(v) => setRole((v as Membership["role"]) ?? "member")}
-              disabled={isSelf}
-              name={isSelf ? undefined : "role"}
-            >
-              <SelectTrigger id="role" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="committee">Committee</SelectItem>
-              </SelectContent>
-            </Select>
-            {isSelf ? (
-              <>
-                <input type="hidden" name="role" value={member.role} />
-                <p className="text-xs text-muted-foreground">
-                  You can&apos;t change your own role.
-                </p>
-              </>
-            ) : null}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              name="status"
-              value={status}
-              onValueChange={(v) =>
-                setStatus((v as MembershipStatus) ?? member.status)
-              }
-            >
-              <SelectTrigger id="status" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {(Object.keys(STATUS_LABELS) as MembershipStatus[]).map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {STATUS_LABELS[s]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {role === "committee" ? (
-          <label className="flex items-center gap-3 text-sm">
-            <Switch
-              name="wineMaster"
-              value="on"
-              defaultChecked={member.wine_master}
-            />
-            <span>Wine Master — keeps the cellar and pairing notes</span>
-          </label>
-        ) : null}
-
-        <FormError message={state.error} />
-        <Button
-          type="submit"
-          loading={pending}
-          variant={isRemoving ? "destructive" : "default"}
-          onClick={(e) => {
-            if (isRemoving) {
-              e.preventDefault();
-              setConfirmRemove(true);
-            }
-          }}
+      <form ref={formRef} action={formAction} className="max-w-4xl space-y-8">
+        <FormSection
+          title="Particulars"
+          description="The name and telephone as they appear in the book. Email is the member's login and can't be changed here."
+          className="border-t-0 pt-0 md:pt-0"
         >
-          {isRemoving ? "Remove member" : "Save member"}
-        </Button>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Name</Label>
+              <Input
+                id="fullName"
+                name="fullName"
+                defaultValue={member.full_name}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <div className="flex h-11 items-center truncate rounded-sm border border-border bg-muted/50 px-3 text-sm text-muted-foreground md:h-10">
+                {member.email}
+              </div>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telephone</Label>
+              <Input id="phone" name="phone" defaultValue={member.phone ?? ""} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="joinedOn">Joined on</Label>
+              <Input
+                id="joinedOn"
+                name="joinedOn"
+                type="date"
+                defaultValue={member.joined_on}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dietary">Dietary notes</Label>
+            <Textarea
+              id="dietary"
+              name="dietary"
+              rows={2}
+              defaultValue={member.dietary_notes ?? ""}
+              placeholder="No shellfish; otherwise omnivorous."
+            />
+          </div>
+        </FormSection>
+
+        <FormSection
+          title="Standing"
+          description="Role in the club and current standing. Removed members lose access but keep their history."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="role">Role</Label>
+              <Select
+                value={role}
+                onValueChange={(v) =>
+                  setRole((v as Membership["role"]) ?? "member")
+                }
+                disabled={isSelf}
+                name={isSelf ? undefined : "role"}
+              >
+                <SelectTrigger id="role" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Member</SelectItem>
+                  <SelectItem value="committee">Committee</SelectItem>
+                </SelectContent>
+              </Select>
+              {isSelf ? (
+                <>
+                  <input type="hidden" name="role" value={member.role} />
+                  <p className="text-xs text-muted-foreground">
+                    You can&apos;t change your own role.
+                  </p>
+                </>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Standing</Label>
+              <Select
+                name="status"
+                value={status}
+                onValueChange={(v) =>
+                  setStatus((v as MembershipStatus) ?? member.status)
+                }
+              >
+                <SelectTrigger id="status" className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(STATUS_LABELS) as MembershipStatus[]).map(
+                    (s) => (
+                      <SelectItem key={s} value={s}>
+                        {STATUS_LABELS[s]}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {role === "committee" ? (
+            <label className="flex items-center justify-between gap-4 rounded-sm border border-gold/50 px-4 py-3 text-sm">
+              <span>
+                <span className="block text-foreground">Wine Master</span>
+                <span className="block text-xs text-muted-foreground">
+                  Keeps the cellar and the pairing notes.
+                </span>
+              </span>
+              <Switch
+                name="wineMaster"
+                value="on"
+                defaultChecked={member.wine_master}
+              />
+            </label>
+          ) : null}
+        </FormSection>
+
+        <FormFooter>
+          <Button
+            type="submit"
+            loading={pending}
+            variant={isRemoving ? "destructive" : "default"}
+            onClick={(e) => {
+              if (isRemoving) {
+                e.preventDefault();
+                setConfirmRemove(true);
+              }
+            }}
+          >
+            {isRemoving ? "Remove member" : "Save member"}
+          </Button>
+          <FormError message={state.error} />
+        </FormFooter>
       </form>
 
       <ConfirmDialog
@@ -178,7 +198,7 @@ export function MemberEditForm({
         onOpenChange={setConfirmRemove}
         destructive
         title={`Remove ${member.full_name || "this member"}?`}
-        description="They lose access to the club, but their attendance history is preserved. You can reactivate them later."
+        description="They lose access to the club, but their attendance history is preserved. You can reinstate them later."
         confirmLabel="Remove member"
         onConfirm={() => {
           setConfirmRemove(false);
