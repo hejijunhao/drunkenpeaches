@@ -15,11 +15,16 @@ import {
   guestPolicy,
   seatsTaken,
   type Lunch,
+  type LunchRole,
   type Membership,
   type Signup,
   type Wine,
   type LunchWine,
 } from "@/lib/types";
+import {
+  critiqueRoleDuty,
+  critiqueRoleLabel,
+} from "@/lib/lunch-roles";
 import {
   findNextOpenLunch,
   resolveSignupPhase,
@@ -57,7 +62,9 @@ import { ErrorBanner } from "@/components/error-banner";
 import { ConfirmSubmit } from "@/components/confirm-submit";
 import { SeatMeter } from "@/components/seat-meter";
 import { CopyButton } from "@/components/copy-button";
+import { CritiqueRoleBadge } from "@/components/critique-role-badge";
 import { SignupCard } from "./signup-card";
+import { CritiqueRolesPanel } from "./critique-roles-panel";
 
 type SignupRow = Signup & {
   memberships: Pick<
@@ -89,12 +96,17 @@ export default async function LunchDetailPage({
     venues: { id: string; name: string; address: string | null } | null;
   };
 
-  const { data: signupData } = await supabase
-    .from("signups")
-    .select("*, memberships(id, full_name, email, dietary_notes)")
-    .eq("lunch_id", id)
-    .order("created_at");
+  const [{ data: signupData }, { data: roleData }] = await Promise.all([
+    supabase
+      .from("signups")
+      .select("*, memberships(id, full_name, email, dietary_notes)")
+      .eq("lunch_id", id)
+      .order("created_at"),
+    supabase.from("lunch_roles").select("*").eq("lunch_id", id),
+  ]);
   const signups = (signupData ?? []) as SignupRow[];
+  const roles = (roleData ?? []) as LunchRole[];
+  const roleByMembership = new Map(roles.map((r) => [r.membership_id, r.role]));
 
   const confirmed = signups.filter((s) => s.status === "confirmed");
   const waitlisted = signups.filter((s) => s.status === "waitlisted");
@@ -122,6 +134,7 @@ export default async function LunchDetailPage({
     signups.find(
       (s) => s.membership_id === ctx.membership.id && s.status !== "cancelled"
     ) ?? null;
+  const myRole = roleByMembership.get(ctx.membership.id) ?? null;
 
   // Committee extras
   let roster: Pick<Membership, "id" | "full_name" | "email">[] = [];
@@ -262,6 +275,18 @@ export default async function LunchDetailPage({
         ) : null}
       </div>
 
+      {myRole ? (
+        <Card className="club-notice gap-2 p-5">
+          <p className="club-kicker">Your speaking role</p>
+          <h2 className="text-h2 text-foreground">
+            You are {critiqueRoleLabel(myRole)}
+          </h2>
+          <p className="max-w-prose text-sm text-muted-foreground">
+            {critiqueRoleDuty(myRole)}
+          </p>
+        </Card>
+      ) : null}
+
       {/* Member sign-up */}
       {lunch.status === "released" ? (
         <SignupCard
@@ -328,8 +353,15 @@ export default async function LunchDetailPage({
                           <p className="truncate text-sm font-medium">
                             {s.memberships?.full_name ?? "Unknown"}
                           </p>
-                          {s.guest_count > 0 || s.added_by_committee ? (
+                          {s.guest_count > 0 ||
+                          s.added_by_committee ||
+                          roleByMembership.has(s.membership_id) ? (
                             <div className="mt-0.5 flex flex-wrap items-center gap-1">
+                              {roleByMembership.has(s.membership_id) ? (
+                                <CritiqueRoleBadge
+                                  role={roleByMembership.get(s.membership_id)!}
+                                />
+                              ) : null}
                               {s.guest_count > 0 ? (
                                 <Badge variant="secondary" className="h-4">
                                   +{s.guest_count} guest
@@ -470,6 +502,31 @@ export default async function LunchDetailPage({
             </CardContent>
           </Card>
         </section>
+      ) : null}
+
+      {lunch.status !== "cancelled" ? (
+        <CritiqueRolesPanel
+          slug={slug}
+          lunchId={lunch.id}
+          roles={roles}
+          attendees={confirmed.flatMap((s) =>
+            s.memberships
+              ? [
+                  {
+                    id: s.memberships.id,
+                    full_name: s.memberships.full_name,
+                    email: s.memberships.email,
+                  },
+                ]
+              : []
+          )}
+          canAssign={
+            ctx.isCommittee &&
+            (lunch.status === "draft" ||
+              lunch.status === "released" ||
+              lunch.status === "completed")
+          }
+        />
       ) : null}
 
       {/* Committee control room */}
