@@ -14,16 +14,14 @@ export interface LunchCardProps {
   /** ISO date (yyyy-mm-dd). */
   date: string;
   venueName?: string | null;
-  /** Seat meter inputs — omit `capacity` to hide the meter. */
   taken?: number;
   capacity?: number | null;
   waitlisted?: number;
-  /** The viewer's own sign-up status, shown as a personal badge. */
   mySignupStatus?: string | null;
   className?: string;
 }
 
-/** Refined lunch summary card — shared by the dashboard and the lunches list. */
+/** Notice-board lunch card — dashboard and the lunches list. */
 export function LunchCard({
   href,
   title,
@@ -38,9 +36,9 @@ export function LunchCard({
 }: LunchCardProps) {
   return (
     <Link href={href} className={cn("block h-full", className)}>
-      <Card hover className="h-full gap-3 p-5">
+      <Card hover className="club-notice h-full gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="font-heading text-base leading-snug font-medium text-foreground">
+          <h3 className="font-heading text-[1.05rem] leading-snug text-foreground">
             {title}
           </h3>
           <StatusBadge status={status} />
@@ -67,7 +65,7 @@ export function LunchCard({
         ) : null}
         {mySignupStatus ? (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Your spot: <StatusBadge status={mySignupStatus} />
+            Your place: <StatusBadge status={mySignupStatus} />
           </div>
         ) : null}
       </Card>

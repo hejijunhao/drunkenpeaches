@@ -116,8 +116,9 @@ export default async function MembersPage({
     <div className="space-y-6">
       <ErrorBanner message={error} />
       <PageHeader
+        kicker="The book"
         title="Members"
-        description={`${activeCount} active member${activeCount === 1 ? "" : "s"}`}
+        description={`${activeCount} member${activeCount === 1 ? "" : "s"} in good standing`}
       />
 
       {ctx.isCommittee ? <InviteForm slug={slug} /> : null}
@@ -126,8 +127,8 @@ export default async function MembersPage({
 
       {ctx.isCommittee ? (
         <p className="text-xs text-muted-foreground">
-          Members are never deleted — mark them resigned, lapsed or removed and
-          their attendance history is preserved.
+          Members are never erased — mark them resigned, lapsed or removed and
+          their attendance remains in the book.
         </p>
       ) : null}
     </div>

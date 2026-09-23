@@ -53,7 +53,7 @@ export function ProfileForm({
           name="dietary"
           rows={3}
           defaultValue={membership.dietary_notes ?? ""}
-          placeholder="e.g. no shellfish, vegetarian…"
+          placeholder="e.g. no shellfish; vegetarian"
         />
         <p className="text-xs text-muted-foreground">
           The committee shares these with the restaurant before each lunch.

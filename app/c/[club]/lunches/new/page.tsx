@@ -29,8 +29,9 @@ export default async function NewLunchPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title="New lunch"
-        description="Book the restaurant first — capacity comes from that booking."
+        kicker="Committee"
+        title="Arrange a lunch"
+        description="Book the restaurant first. Capacity is taken from that booking."
       />
       <LunchForm
         slug={slug}

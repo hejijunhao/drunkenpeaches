@@ -153,7 +153,7 @@ export function MemberEditForm({
               value="on"
               defaultChecked={member.wine_master}
             />
-            <span>🍷 Wine Master — gets the wine-selection screens</span>
+            <span>Wine Master — keeps the cellar and pairing notes</span>
           </label>
         ) : null}
 

@@ -58,7 +58,7 @@ export function WineForm({ slug }: { slug: string }) {
       </div>
       <div className="space-y-2 sm:col-span-5">
         <Label htmlFor="notes">Notes</Label>
-        <Input id="notes" name="notes" placeholder="Drinking window, style…" />
+        <Input id="notes" name="notes" placeholder="Drinking window, style" />
       </div>
       <div className="flex items-end sm:col-span-1">
         <Button type="submit" loading={pending} className="w-full">

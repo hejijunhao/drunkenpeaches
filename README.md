@@ -1,7 +1,7 @@
-# 🍑 Drunken Peaches
+# Drunken Peaches
 
-Modern, multi-tenant lunch & member management for private dining clubs —
-built to replace WildApricot for clubs like **Beefsteaks & Burgundy**.
+The members' book for private dining clubs — luncheons, the list, the cellar.
+Built to replace WildApricot for clubs such as **Beefsteaks & Burgundy**.
 See [docs/vision.md](docs/vision.md) and [docs/architecture.md](docs/architecture.md).
 
 ## Stack

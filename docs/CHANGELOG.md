@@ -4,8 +4,25 @@ All notable changes to Drunken Peaches are recorded here. Newest first.
 
 ## Index
 
+- **[0.3.0](#030--2026-09-23)** — Quiet-luxury members' club redesign: mobile-first shell, oxblood-on-paper tokens, club-secretary copy, peach emoji retired.
 - **[0.2.0](#020--2026-06-13)** — Front-end redesign: "editorial wine-cellar" design system, light + dark themes, new component library, and a full screen-by-screen UI overhaul.
 - **[0.1.0](#010--2026-06-13)** — Initial build: multi-tenant club lunch & member management (auth, members, venues, lunches, sign-ups/waitlist, wine, email, reminder cron).
+
+---
+
+## 0.3.0 — 2026-09-23
+
+Visual and verbal polish for an exclusive private members' club — mobile-first.
+No backend, auth, or routing changes.
+
+- **Design system:** Newsreader (titles) + Source Sans 3 (UI); tighter radius;
+  cream paper / oxblood accent; square initials; notice-board cards with a
+  left rule; larger tap targets.
+- **Chrome:** serif "P" monogram replaces the peach emoji; phone bottom tabs
+  (Home / Lunches / Members / More); desktop keeps a quiet top nav.
+- **Copy:** club-secretary tone on marketing, auth, dashboard, lunches, members,
+  venues, wine, settings, profile, and member emails. Emoji removed from
+  user-facing strings.
 
 ---
 

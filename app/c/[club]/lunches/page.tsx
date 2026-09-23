@@ -77,31 +77,35 @@ export default async function LunchesPage({
   return (
     <div className="space-y-8">
       <ErrorBanner message={error} />
-      <PageHeader title="Lunches">
+      <PageHeader
+        kicker="The book"
+        title="Luncheons"
+        description="Forthcoming and past tables."
+      >
         {ctx.isCommittee ? (
           <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
             <PlusIcon />
-            New lunch
+            Arrange a lunch
           </Button>
         ) : null}
       </PageHeader>
 
       <section className="space-y-3">
-        <h2 className="text-h2 text-foreground">Upcoming</h2>
+        <h2 className="text-h2 text-foreground">Forthcoming</h2>
         {upcoming.length === 0 ? (
           <EmptyState
             icon={CalendarOffIcon}
-            title="Nothing on the calendar yet"
+            title="Nothing on the calendar"
             description={
               ctx.isCommittee
-                ? "Create a lunch and release it to members once the booking is confirmed."
-                : "Check back when the committee releases the next lunch."
+                ? "Arrange a lunch and release it once the restaurant is booked."
+                : "The committee will post the next luncheon here."
             }
             action={
               ctx.isCommittee ? (
                 <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
                   <PlusIcon />
-                  New lunch
+                  Arrange a lunch
                 </Button>
               ) : undefined
             }

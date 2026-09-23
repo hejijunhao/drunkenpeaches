@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 import { AuthShell } from "@/components/auth-shell";
 import { SignupForm } from "./signup-form";
 
-export const metadata: Metadata = { title: "Create your club" };
+export const metadata: Metadata = { title: "Establish a chapter" };
 
 export default function SignupPage() {
   return (
     <AuthShell
-      title="Create your club"
-      description="You'll become the first committee admin and can invite members right away."
+      title="Establish a chapter"
+      description="You will be the first committee member, and may invite others at once."
       footer={
         <p>
           Already a member?{" "}
@@ -17,7 +17,7 @@ export default function SignupPage() {
             href="/login"
             className="text-foreground underline underline-offset-4 hover:text-primary"
           >
-            Log in
+            Members&apos; entrance
           </Link>
         </p>
       }

@@ -15,13 +15,13 @@ import { AddVenueDialog } from "./add-venue-dialog";
 export const metadata: Metadata = { title: "Venues" };
 
 const STAGES: { status: Venue["status"]; title: string; hint: string }[] = [
-  { status: "candidate", title: "Candidates", hint: "Restaurants worth a look" },
+  { status: "candidate", title: "Candidates", hint: "Houses under consideration" },
   {
     status: "tasting",
     title: "Committee tasting",
-    hint: "Evaluation visit planned or done",
+    hint: "Visit arranged or recorded",
   },
-  { status: "approved", title: "Approved", hint: "Ready to book a lunch" },
+  { status: "approved", title: "Approved", hint: "Ready for a luncheon" },
 ];
 
 export default async function VenuesPage({
@@ -51,8 +51,9 @@ export default async function VenuesPage({
     <div className="space-y-8">
       <ErrorBanner message={error} />
       <PageHeader
-        title="Venue pipeline"
-        description="Candidate → committee tasting → approved → booked lunch."
+        kicker="Back of house"
+        title="Venues"
+        description="Candidate, tasting, approved — then a booked table."
       >
         <AddVenueDialog slug={slug} />
       </PageHeader>
@@ -100,7 +101,7 @@ export default async function VenuesPage({
                   </Link>
                 ))}
                 {inStage.length === 0 ? (
-                  <EmptyState title="Empty" className="px-4 py-8" />
+                  <EmptyState title="None at present" className="px-4 py-6" />
                 ) : null}
               </div>
             </div>

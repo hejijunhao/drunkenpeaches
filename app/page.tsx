@@ -1,27 +1,26 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ClipboardCheckIcon, UsersIcon, WineIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BrandWordmark } from "@/components/brand-mark";
 import { createClient } from "@/lib/supabase/server";
 import { getMyClubs } from "@/lib/club-context";
 
-const FEATURES = [
+const NOTICES = [
   {
-    icon: UsersIcon,
-    title: "Fixed-capacity sign-ups",
-    body: "Capacity comes from the real restaurant booking. Members sign up first-come-first-served; everyone else queues on the waitlist and is auto-promoted when a seat frees up.",
+    kicker: "The list",
+    title: "Fixed seats, in order of name",
+    body: "Capacity is the restaurant booking. Members add their names first-come; the rest wait, and a place is offered the moment one is free.",
   },
   {
-    icon: ClipboardCheckIcon,
-    title: "Committee back-of-house",
-    body: "A venue pipeline from candidate to tasting to booked lunch, dietary summaries for the restaurant, manual overrides, and roster management.",
+    kicker: "The committee",
+    title: "The secretary’s desk",
+    body: "Venues from candidate to tasting to table. Dietary notes for the house. Manual overrides when a member telephones.",
   },
   {
-    icon: WineIcon,
-    title: "Wine, handled",
-    body: "Your Wine Master keeps a lightweight cellar and records each lunch's selection and pairing — then the app gets out of the way at the table.",
+    kicker: "The cellar",
+    title: "Wine, recorded quietly",
+    body: "The Wine Master keeps a short cellar and notes the pairing. Members see none of it until they sit down.",
   },
 ];
 
@@ -34,82 +33,74 @@ export default async function LandingPage() {
   if (user) {
     const clubs = await getMyClubs();
     if (clubs.length > 0) redirect(`/c/${clubs[0].slug}/dashboard`);
-    // Signed in but no active membership — fall through to the landing page.
   }
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/65">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="flex items-center gap-2">
-            <span className="text-lg" aria-hidden>
-              🍑
-            </span>
-            <span className="font-heading text-lg font-medium tracking-tight">
-              Drunken Peaches
-            </span>
-          </span>
-          <nav className="flex items-center gap-2">
+      <header className="sticky top-0 z-30 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="mx-auto flex h-14 max-w-5xl items-center justify-between gap-3 px-4 sm:h-16 sm:px-6">
+          <BrandWordmark size="sm" />
+          <nav className="flex items-center gap-1 sm:gap-2">
             <ThemeToggle />
-            <Button variant="ghost" render={<Link href="/login" />}>
-              Log in
+            <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+              Members
             </Button>
-            <Button render={<Link href="/signup" />}>Create your club</Button>
+            <Button size="sm" render={<Link href="/signup" />}>
+              Establish a chapter
+            </Button>
           </nav>
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-40 left-1/2 size-[40rem] -translate-x-1/2 rounded-full bg-primary/5 blur-3xl"
-        />
-        <div className="relative mx-auto max-w-3xl px-6 py-24 text-center sm:py-28">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
-            <span aria-hidden>🍑</span> For private dining clubs &amp; chapters
-          </p>
-          <h1 className="text-display text-balance text-foreground">
-            Run your dining club without the 2007 clunk.
+      <section className="relative">
+        <div className="mx-auto max-w-2xl px-5 pb-14 pt-12 sm:px-6 sm:pb-20 sm:pt-20">
+          <p className="club-kicker">Private dining clubs</p>
+          <h1 className="text-display mt-4 text-balance text-foreground">
+            The book is kept.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-lg text-balance text-muted-foreground">
-            Lunches, sign-ups, waitlists, venues and wine — modern, fast member
-            management for private dining clubs and chapters. Book the
-            restaurant, release the lunch, and let first-come-first-served do
-            the rest.
+          <div className="club-rule mt-6 max-w-16" />
+          <p className="mt-6 max-w-xl text-pretty text-[1.05rem] leading-relaxed text-muted-foreground sm:text-lg">
+            Luncheons, the list, the cellar — recorded for the committee and
+            the table. Invitation only. Built for clubs such as Beefsteaks
+            &amp; Burgundy.
           </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button size="lg" render={<Link href="/signup" />}>
-              Create your club
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Button size="lg" className="w-full sm:w-auto" render={<Link href="/login" />}>
+              Members&apos; entrance
             </Button>
             <Button
               size="lg"
               variant="outline"
-              render={<Link href="/login" />}
+              className="w-full sm:w-auto"
+              render={<Link href="/signup" />}
             >
-              Member log in
+              Establish a chapter
             </Button>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-5xl gap-6 px-6 pb-24 sm:grid-cols-3">
-        {FEATURES.map((f) => (
-          <Card key={f.title} hover className="gap-3 p-6">
-            <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <f.icon className="size-5" />
-            </div>
-            <h3 className="font-heading text-base font-medium text-foreground">
-              {f.title}
-            </h3>
-            <p className="text-sm text-muted-foreground">{f.body}</p>
-          </Card>
+      <section className="mx-auto w-full max-w-2xl space-y-0 border-t border-border px-5 sm:px-6">
+        {NOTICES.map((n) => (
+          <article
+            key={n.title}
+            className="border-b border-border py-8 last:border-b-0"
+          >
+            <p className="club-kicker">{n.kicker}</p>
+            <h2 className="font-heading mt-2 text-xl text-foreground sm:text-2xl">
+              {n.title}
+            </h2>
+            <p className="mt-2 max-w-prose text-[0.95rem] leading-relaxed text-muted-foreground">
+              {n.body}
+            </p>
+          </article>
         ))}
       </section>
 
-      <footer className="mt-auto border-t border-border bg-card">
-        <div className="mx-auto max-w-5xl px-6 py-6 text-sm text-muted-foreground">
-          Built for clubs like Beefsteaks &amp; Burgundy. Every club is its own
-          private, isolated tenant.
+      <footer className="mt-auto border-t border-border">
+        <div className="mx-auto flex max-w-5xl flex-col gap-1 px-5 py-6 text-xs leading-relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <span>Drunken Peaches</span>
+          <span>Each club is a private, isolated chapter.</span>
         </div>
       </footer>
     </main>

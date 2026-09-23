@@ -14,7 +14,7 @@ import { ErrorBanner } from "@/components/error-banner";
 import { ConfirmSubmit } from "@/components/confirm-submit";
 import { WineForm } from "./wine-form";
 
-export const metadata: Metadata = { title: "Wine cellar" };
+export const metadata: Metadata = { title: "Wine" };
 
 export default async function WinePage({
   params,
@@ -92,18 +92,14 @@ export default async function WinePage({
     <div className="space-y-6">
       <ErrorBanner message={error} />
       <PageHeader
-        title={
-          <span className="flex items-center gap-2.5">
-            <WineIcon className="size-7 text-gold" />
-            Wine cellar
-          </span>
-        }
-        description="A lightweight catalogue — the club cellar plus restaurant-list picks. Pick wines for a lunch from that lunch's page. No bottle counting in v1."
+        kicker="The cellar"
+        title="Wine"
+        description="A short catalogue of the club cellar and restaurant-list picks. Wines are assigned from each luncheon. No bottle counting."
       />
 
       <Card>
         <CardHeader>
-          <CardTitle>Add to the catalogue</CardTitle>
+          <CardTitle>Add a wine</CardTitle>
         </CardHeader>
         <CardContent>
           <WineForm slug={slug} />
@@ -118,7 +114,7 @@ export default async function WinePage({
           <EmptyState
             icon={WineIcon}
             title="The cellar is empty"
-            description="Add your first wine above — cellar bottles or restaurant-list picks."
+            description="Record a bottle from the club cellar or the house list."
           />
         }
       />

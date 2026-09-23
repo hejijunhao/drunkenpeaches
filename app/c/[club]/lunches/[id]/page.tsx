@@ -184,7 +184,7 @@ export default async function LunchDetailPage({
             {lunch.signup_cutoff_at && lunch.status === "released" ? (
               <p className="flex items-center gap-2">
                 <LockIcon className="size-4 shrink-0" />
-                Sign-ups {cutoffPassed ? "locked since" : "lock at"}{" "}
+                The list {cutoffPassed ? "closed on" : "closes at"}{" "}
                 {fmtDateTime(lunch.signup_cutoff_at)}
               </p>
             ) : null}
@@ -248,7 +248,7 @@ export default async function LunchDetailPage({
             <CardContent>
               {confirmed.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No one yet — be first!
+                  The list is empty.
                 </p>
               ) : (
                 <ul className="space-y-1">
@@ -360,7 +360,7 @@ export default async function LunchDetailPage({
             <CardContent>
               {waitlisted.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Empty — seats available.
+                  No one waiting. Seats remain.
                 </p>
               ) : (
                 <ol className="space-y-1">
@@ -631,12 +631,7 @@ export default async function LunchDetailPage({
           {ctx.isWineMaster ? (
             <Card className="border-gold/30">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span className="text-gold" aria-hidden>
-                    🍷
-                  </span>
-                  Wine selection &amp; pairing
-                </CardTitle>
+                <CardTitle>Wine selection &amp; pairing</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {lunchWines.length === 0 ? (

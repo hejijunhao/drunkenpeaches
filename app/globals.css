@@ -8,10 +8,11 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  /* Fonts — Geist Sans body, Fraunces editorial display, Geist Mono */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-fraunces);
+  /* Fonts — Source Sans 3 for UI, Newsreader for titles. Literal families:
+     @theme inline resolves at parse time and cannot see next/font runtime vars. */
+  --font-sans: "Source Sans 3", "Source Sans 3 Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, "SFMono-Regular", monospace;
+  --font-heading: "Newsreader", "Newsreader Fallback", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
 
   /* Surfaces & actions */
   --color-card: var(--card);
@@ -32,11 +33,11 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Brand premium accent */
+  /* Restrained brass — wine-master / premium only */
   --color-gold: var(--gold);
   --color-gold-foreground: var(--gold-foreground);
 
-  /* Semantic status system — shared by Badge tones, dots & banners */
+  /* Semantic status system */
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -48,14 +49,12 @@
   --color-info: var(--info);
   --color-info-foreground: var(--info-foreground);
 
-  /* Charts (warm burgundy→gold ramp) */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  /* Sidebar (unused today, kept warm to avoid grayscale leak) */
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -65,200 +64,214 @@
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
 
-  /* Elevation — two-tier, warm-tinted (driven by --shadow-color per theme) */
   --shadow-soft:
-    0 1px 2px 0 oklch(var(--shadow-color) / 0.04),
-    0 2px 6px -1px oklch(var(--shadow-color) / 0.08);
+    0 1px 1px 0 oklch(var(--shadow-color) / 0.03),
+    0 1px 3px -1px oklch(var(--shadow-color) / 0.06);
   --shadow-lifted:
-    0 4px 12px -2px oklch(var(--shadow-color) / 0.12),
-    0 12px 28px -6px oklch(var(--shadow-color) / 0.12);
+    0 2px 8px -2px oklch(var(--shadow-color) / 0.1),
+    0 8px 20px -6px oklch(var(--shadow-color) / 0.1);
 
-  /* Standardized motion */
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --duration-micro: 150ms;
   --duration-default: 220ms;
   --duration-overlay: 300ms;
 
-  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-sm: calc(var(--radius) * 0.55);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.35);
+  --radius-2xl: calc(var(--radius) * 1.7);
+  --radius-3xl: calc(var(--radius) * 2.1);
+  --radius-4xl: calc(var(--radius) * 2.5);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Light theme — editorial wine cellar: parchment canvas, oxblood primary,
-   warm ink. Pairs verified for WCAG AA (see Phase 10 audit).
+   Light — club notice paper: warm cream, oxblood, ink. One accent only.
    ───────────────────────────────────────────────────────────────────────── */
 :root {
-  --background: oklch(0.985 0.006 70); /* warm parchment, not pure white */
-  --foreground: oklch(0.22 0.02 40); /* warm near-black ink */
-  --card: oklch(1 0 0); /* crisp white panels */
-  --card-foreground: oklch(0.22 0.02 40);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 40);
+  --background: oklch(0.968 0.012 78);
+  --foreground: oklch(0.2 0.018 38);
+  --card: oklch(0.988 0.006 80);
+  --card-foreground: oklch(0.2 0.018 38);
+  --popover: oklch(0.988 0.006 80);
+  --popover-foreground: oklch(0.2 0.018 38);
 
-  --primary: oklch(0.38 0.13 18); /* oxblood — CTA, links, active nav */
-  --primary-foreground: oklch(0.97 0.01 80); /* cream */
-  --secondary: oklch(0.95 0.012 70); /* muted parchment chips/btns */
-  --secondary-foreground: oklch(0.28 0.02 40);
-  --muted: oklch(0.96 0.008 70); /* table headers, inset panels */
-  --muted-foreground: oklch(0.5 0.015 50); /* secondary text */
-  --accent: oklch(0.93 0.02 60); /* nav/row hover wash */
-  --accent-foreground: oklch(0.28 0.02 40);
-  --destructive: oklch(0.55 0.2 27); /* warmed red */
+  --primary: oklch(0.34 0.12 18);
+  --primary-foreground: oklch(0.97 0.012 82);
+  --secondary: oklch(0.94 0.014 76);
+  --secondary-foreground: oklch(0.26 0.02 38);
+  --muted: oklch(0.945 0.01 76);
+  --muted-foreground: oklch(0.46 0.016 48);
+  --accent: oklch(0.93 0.016 68);
+  --accent-foreground: oklch(0.26 0.02 38);
+  --destructive: oklch(0.5 0.16 25);
   --destructive-foreground: oklch(0.98 0.01 80);
 
-  --border: oklch(0.9 0.01 70); /* warm hairline */
-  --input: oklch(0.9 0.01 70);
-  --ring: oklch(0.55 0.09 18); /* burgundy-tinted focus */
+  --border: oklch(0.86 0.016 72);
+  --input: oklch(0.86 0.016 72);
+  --ring: oklch(0.5 0.08 18);
 
-  --gold: oklch(0.78 0.11 85); /* wine-master / premium */
-  --gold-foreground: oklch(0.28 0.04 70);
+  --gold: oklch(0.68 0.08 78);
+  --gold-foreground: oklch(0.24 0.03 70);
 
-  /* Status — text-legible saturated tone in light (used as text + soft tint) */
-  --success: oklch(0.52 0.13 155);
+  --success: oklch(0.46 0.1 152);
   --success-foreground: oklch(0.98 0.01 150);
-  --warning: oklch(0.55 0.12 65);
+  --warning: oklch(0.5 0.1 68);
   --warning-foreground: oklch(0.98 0.01 90);
-  --danger: oklch(0.55 0.2 27);
+  --danger: oklch(0.5 0.16 25);
   --danger-foreground: oklch(0.98 0.01 80);
-  --neutral: oklch(0.5 0.015 50);
+  --neutral: oklch(0.48 0.014 50);
   --neutral-foreground: oklch(0.98 0.006 80);
-  --info: oklch(0.38 0.13 18); /* burgundy — "completed" */
-  --info-foreground: oklch(0.97 0.01 80);
+  --info: oklch(0.34 0.12 18);
+  --info-foreground: oklch(0.97 0.012 82);
 
-  --chart-1: oklch(0.38 0.13 18);
-  --chart-2: oklch(0.55 0.12 40);
-  --chart-3: oklch(0.7 0.11 65);
-  --chart-4: oklch(0.78 0.11 85);
-  --chart-5: oklch(0.52 0.13 155);
+  --chart-1: oklch(0.34 0.12 18);
+  --chart-2: oklch(0.5 0.1 40);
+  --chart-3: oklch(0.64 0.08 68);
+  --chart-4: oklch(0.68 0.08 78);
+  --chart-5: oklch(0.46 0.1 152);
 
-  --radius: 0.75rem; /* softer than stock 0.625 */
-  --shadow-color: 0.3 0.04 40; /* warm ink for tinted shadows */
+  --radius: 0.375rem;
+  --shadow-color: 0.28 0.03 40;
 
-  --sidebar: oklch(0.97 0.008 70);
-  --sidebar-foreground: oklch(0.22 0.02 40);
-  --sidebar-primary: oklch(0.38 0.13 18);
-  --sidebar-primary-foreground: oklch(0.97 0.01 80);
-  --sidebar-accent: oklch(0.93 0.02 60);
-  --sidebar-accent-foreground: oklch(0.28 0.02 40);
-  --sidebar-border: oklch(0.9 0.01 70);
-  --sidebar-ring: oklch(0.55 0.09 18);
+  --sidebar: oklch(0.955 0.01 76);
+  --sidebar-foreground: oklch(0.2 0.018 38);
+  --sidebar-primary: oklch(0.34 0.12 18);
+  --sidebar-primary-foreground: oklch(0.97 0.012 82);
+  --sidebar-accent: oklch(0.93 0.016 68);
+  --sidebar-accent-foreground: oklch(0.26 0.02 38);
+  --sidebar-border: oklch(0.86 0.016 72);
+  --sidebar-ring: oklch(0.5 0.08 18);
+
+  --club-header-h: 3.5rem;
+  --club-tab-h: 4rem;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Dark theme — a genuine dark cellar: warm near-black aubergine canvas,
-   parchment text, burgundy lifted for AA contrast.
+   Dark — a quiet cellar: warm near-black, parchment type, lifted oxblood.
    ───────────────────────────────────────────────────────────────────────── */
 .dark {
-  --background: oklch(0.18 0.012 30); /* warm near-black, faint aubergine */
-  --foreground: oklch(0.94 0.01 80); /* parchment text */
-  --card: oklch(0.22 0.014 30); /* raised panel */
-  --card-foreground: oklch(0.94 0.01 80);
-  --popover: oklch(0.22 0.014 30);
-  --popover-foreground: oklch(0.94 0.01 80);
+  --background: oklch(0.155 0.014 28);
+  --foreground: oklch(0.93 0.012 82);
+  --card: oklch(0.2 0.016 28);
+  --card-foreground: oklch(0.93 0.012 82);
+  --popover: oklch(0.2 0.016 28);
+  --popover-foreground: oklch(0.93 0.012 82);
 
-  --primary: oklch(0.62 0.16 18); /* brighter burgundy for AA on dark */
-  --primary-foreground: oklch(0.16 0.01 30);
-  --secondary: oklch(0.28 0.016 30);
-  --secondary-foreground: oklch(0.94 0.01 80);
-  --muted: oklch(0.26 0.014 30);
-  --muted-foreground: oklch(0.7 0.012 70);
-  --accent: oklch(0.3 0.02 30);
-  --accent-foreground: oklch(0.94 0.01 80);
-  --destructive: oklch(0.65 0.19 27);
+  --primary: oklch(0.64 0.14 18);
+  --primary-foreground: oklch(0.14 0.012 28);
+  --secondary: oklch(0.25 0.016 28);
+  --secondary-foreground: oklch(0.93 0.012 82);
+  --muted: oklch(0.23 0.014 28);
+  --muted-foreground: oklch(0.7 0.014 72);
+  --accent: oklch(0.27 0.018 28);
+  --accent-foreground: oklch(0.93 0.012 82);
+  --destructive: oklch(0.66 0.16 25);
   --destructive-foreground: oklch(0.98 0.01 80);
 
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.62 0.13 18);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.64 0.12 18);
 
-  --gold: oklch(0.8 0.12 85);
-  --gold-foreground: oklch(0.2 0.03 70);
+  --gold: oklch(0.76 0.09 80);
+  --gold-foreground: oklch(0.18 0.03 70);
 
-  --success: oklch(0.72 0.15 155);
+  --success: oklch(0.7 0.12 152);
   --success-foreground: oklch(0.16 0.02 150);
-  --warning: oklch(0.8 0.13 75);
-  --warning-foreground: oklch(0.2 0.03 70);
-  --danger: oklch(0.7 0.19 27);
-  --danger-foreground: oklch(0.16 0.02 30);
-  --neutral: oklch(0.7 0.012 70);
-  --neutral-foreground: oklch(0.16 0.01 30);
-  --info: oklch(0.62 0.16 18);
-  --info-foreground: oklch(0.16 0.01 30);
+  --warning: oklch(0.78 0.11 75);
+  --warning-foreground: oklch(0.18 0.03 70);
+  --danger: oklch(0.68 0.16 25);
+  --danger-foreground: oklch(0.16 0.02 28);
+  --neutral: oklch(0.7 0.014 72);
+  --neutral-foreground: oklch(0.16 0.01 28);
+  --info: oklch(0.64 0.14 18);
+  --info-foreground: oklch(0.14 0.012 28);
 
-  --chart-1: oklch(0.62 0.16 18);
-  --chart-2: oklch(0.68 0.13 45);
-  --chart-3: oklch(0.75 0.12 70);
-  --chart-4: oklch(0.8 0.12 85);
-  --chart-5: oklch(0.72 0.15 155);
+  --chart-1: oklch(0.64 0.14 18);
+  --chart-2: oklch(0.66 0.11 45);
+  --chart-3: oklch(0.72 0.1 70);
+  --chart-4: oklch(0.76 0.09 80);
+  --chart-5: oklch(0.7 0.12 152);
 
-  --shadow-color: 0 0 0; /* black depth on dark */
+  --shadow-color: 0 0 0;
 
-  --sidebar: oklch(0.22 0.014 30);
-  --sidebar-foreground: oklch(0.94 0.01 80);
-  --sidebar-primary: oklch(0.62 0.16 18);
-  --sidebar-primary-foreground: oklch(0.16 0.01 30);
-  --sidebar-accent: oklch(0.3 0.02 30);
-  --sidebar-accent-foreground: oklch(0.94 0.01 80);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.62 0.13 18);
+  --sidebar: oklch(0.2 0.016 28);
+  --sidebar-foreground: oklch(0.93 0.012 82);
+  --sidebar-primary: oklch(0.64 0.14 18);
+  --sidebar-primary-foreground: oklch(0.14 0.012 28);
+  --sidebar-accent: oklch(0.27 0.018 28);
+  --sidebar-accent-foreground: oklch(0.93 0.012 82);
+  --sidebar-border: oklch(1 0 0 / 11%);
+  --sidebar-ring: oklch(0.64 0.12 18);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
   }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1rem;
+    line-height: 1.55;
+    letter-spacing: 0.005em;
+  }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Typography — editorial type scale. Use these or the `font-heading` utility
-   so display/headings consistently render in Fraunces.
-   ───────────────────────────────────────────────────────────────────────── */
 @layer components {
   .font-heading {
-    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-family: var(--font-heading), "Iowan Old Style", Palatino, Georgia, serif;
     font-optical-sizing: auto;
+    font-weight: 500;
   }
+
   .text-display {
-    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-family: var(--font-heading), "Iowan Old Style", Palatino, Georgia, serif;
     font-optical-sizing: auto;
-    font-weight: 600;
-    font-size: clamp(2.25rem, 1.4rem + 3.4vw, 3.25rem);
-    line-height: 1.04;
-    letter-spacing: -0.02em;
+    font-weight: 500;
+    font-size: clamp(2rem, 1.35rem + 3.2vw, 3.15rem);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
   }
+
   .text-h1 {
-    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-family: var(--font-heading), "Iowan Old Style", Palatino, Georgia, serif;
     font-optical-sizing: auto;
-    font-weight: 600;
-    font-size: 1.875rem;
-    line-height: 1.15;
+    font-weight: 500;
+    font-size: clamp(1.55rem, 1.3rem + 1.1vw, 1.85rem);
+    line-height: 1.18;
     letter-spacing: -0.012em;
   }
+
   .text-h2 {
-    font-family: var(--font-heading), ui-serif, Georgia, serif;
+    font-family: var(--font-heading), "Iowan Old Style", Palatino, Georgia, serif;
     font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: 1.2rem;
+    line-height: 1.28;
+    letter-spacing: -0.006em;
+  }
+
+  .club-kicker {
+    font-size: 0.6875rem;
     font-weight: 600;
-    font-size: 1.25rem;
-    line-height: 1.25;
-    letter-spacing: -0.008em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .club-rule {
+    height: 1px;
+    background: color-mix(in oklch, var(--primary) 35%, var(--border));
+  }
+
+  .club-notice {
+    border-left: 2px solid var(--primary);
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Motion — global reduced-motion guard. Every animation/transition in the app
-   collapses to instant when the user requests reduced motion.
-   ───────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

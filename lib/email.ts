@@ -27,7 +27,7 @@ function layout(title: string, body: string) {
     <h2 style="font-weight: 600; margin-bottom: 16px;">${title}</h2>
     ${body}
     <hr style="border: none; border-top: 1px solid #e7e5e4; margin: 32px 0 16px;" />
-    <p style="font-size: 12px; color: #a8a29e;">Sent by Drunken Peaches club lunch manager.</p>
+    <p style="font-size: 12px; color: #a8a29e;">The secretary, Drunken Peaches.</p>
   </div>`;
 }
 
@@ -47,11 +47,11 @@ export async function sendInviteEmail(opts: {
 }) {
   await send(
     opts.to,
-    `You're invited to join ${opts.clubName}`,
+    `An invitation to ${opts.clubName}`,
     layout(
-      `Welcome to ${opts.clubName}`,
-      `<p>The committee has invited you to join <strong>${opts.clubName}</strong>.</p>
-       <p>Click below to set your password and complete your profile:</p>
+      `You are invited to ${opts.clubName}`,
+      `<p>The committee has proposed you for membership of <strong>${opts.clubName}</strong>.</p>
+       <p>Please set a password and complete your particulars:</p>
        <p style="margin: 24px 0;">
          <a href="${opts.inviteLink}" style="background: #1c1917; color: #fafaf9; padding: 12px 24px; text-decoration: none; border-radius: 6px;">Accept invitation</a>
        </p>
@@ -93,13 +93,13 @@ export async function sendSignupConfirmed(opts: {
       : "";
   await send(
     opts.to,
-    `You're confirmed — ${opts.lunchTitle}`,
+    `Your place is confirmed — ${opts.lunchTitle}`,
     layout(
-      "Sign-up confirmed",
-      `<p>Hi ${opts.name || "there"},</p>
-       <p>Your spot for <strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong>${opts.venueName ? ` at ${opts.venueName}` : ""} is confirmed.</p>
+      "Your name is on the list",
+      `<p>Dear ${opts.name || "member"},</p>
+       <p>Your place for <strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong>${opts.venueName ? ` at ${opts.venueName}` : ""} is confirmed.</p>
        ${guests}
-       <p>See you there — ${opts.clubName}</p>`
+       <p>— ${opts.clubName}</p>`
     )
   );
 }
@@ -113,12 +113,12 @@ export async function sendWaitlisted(opts: {
 }) {
   await send(
     opts.to,
-    `You're on the waitlist — ${opts.lunchTitle}`,
+    `You are on the waitlist — ${opts.lunchTitle}`,
     layout(
-      "You're on the waitlist",
-      `<p>Hi ${opts.name || "there"},</p>
-       <p><strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong> is currently full, so you've been added to the waitlist.</p>
-       <p>If a spot opens up you'll be promoted automatically and emailed right away.</p>
+      "You are on the waitlist",
+      `<p>Dear ${opts.name || "member"},</p>
+       <p><strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong> is presently full. Your name has been added to the waitlist.</p>
+       <p>Should a place become free, it will be offered to you and you will be written to at once.</p>
        <p>— ${opts.clubName}</p>`
     )
   );
@@ -134,12 +134,12 @@ export async function sendPromoted(opts: {
 }) {
   await send(
     opts.to,
-    `A spot opened up — you're in! ${opts.lunchTitle}`,
+    `A place has become available — ${opts.lunchTitle}`,
     layout(
-      "You're off the waitlist 🎉",
-      `<p>Hi ${opts.name || "there"},</p>
-       <p>Good news — a spot opened up and you're now <strong>confirmed</strong> for <strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong>${opts.venueName ? ` at ${opts.venueName}` : ""}.</p>
-       <p>If you can no longer make it, please cancel in the app so the next person can take the seat.</p>
+      "A place has become available",
+      `<p>Dear ${opts.name || "member"},</p>
+       <p>A place has become free. You are now <strong>confirmed</strong> for <strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong>${opts.venueName ? ` at ${opts.venueName}` : ""}.</p>
+       <p>If you are no longer able to attend, please withdraw your name so the next member may take the seat.</p>
        <p>— ${opts.clubName}</p>`
     )
   );
@@ -159,7 +159,7 @@ export async function sendLunchReminder(opts: {
     `Reminder — ${opts.lunchTitle} is coming up`,
     layout(
       "Lunch reminder",
-      `<p>Hi ${opts.name || "there"},</p>
+      `<p>Dear ${opts.name || "member"},</p>
        <p>A reminder that <strong>${opts.lunchTitle}</strong> is on <strong>${fmtDate(opts.lunchDate)}</strong> at ${opts.startTime.slice(0, 5)}${opts.venueName ? `, at ${opts.venueName}` : ""}.</p>
        <p>— ${opts.clubName}</p>`
     )
@@ -178,8 +178,8 @@ export async function sendLunchCancelled(opts: {
     `Cancelled — ${opts.lunchTitle}`,
     layout(
       "Lunch cancelled",
-      `<p>Hi ${opts.name || "there"},</p>
-       <p>Unfortunately <strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong> has been cancelled by the committee.</p>
+      `<p>Dear ${opts.name || "member"},</p>
+       <p>The committee has cancelled <strong>${opts.lunchTitle}</strong> on <strong>${fmtDate(opts.lunchDate)}</strong>.</p>
        <p>— ${opts.clubName}</p>`
     )
   );
@@ -198,8 +198,8 @@ export async function sendLunchChanged(opts: {
     `Updated — ${opts.lunchTitle}`,
     layout(
       "Lunch details changed",
-      `<p>Hi ${opts.name || "there"},</p>
-       <p>The details for <strong>${opts.lunchTitle}</strong> (${fmtDate(opts.lunchDate)}) have changed:</p>
+      `<p>Dear ${opts.name || "member"},</p>
+       <p>The particulars for <strong>${opts.lunchTitle}</strong> (${fmtDate(opts.lunchDate)}) have changed:</p>
        <p>${opts.changeSummary}</p>
        <p>Check the app for the latest details: <a href="${APP_URL()}">${APP_URL()}</a></p>
        <p>— ${opts.clubName}</p>`

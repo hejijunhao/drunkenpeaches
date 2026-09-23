@@ -12,7 +12,7 @@ import {
 } from "@/components/attendance-history";
 import { ProfileForm } from "./profile-form";
 
-export const metadata: Metadata = { title: "My profile" };
+export const metadata: Metadata = { title: "My particulars" };
 
 export default async function ProfilePage({
   params,
@@ -59,7 +59,7 @@ export default async function ProfilePage({
           </AvatarFallback>
         </Avatar>
         <div className="space-y-1.5">
-          <h1 className="text-h1 text-foreground">My profile</h1>
+          <h1 className="text-h1 text-foreground">My particulars</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>
               {ctx.club.name} · member since{" "}
@@ -69,7 +69,7 @@ export default async function ProfilePage({
               <Badge variant="secondary">Committee</Badge>
             ) : null}
             {ctx.membership.wine_master ? (
-              <Badge tone="info">🍷 Wine Master</Badge>
+              <Badge tone="info">Wine Master</Badge>
             ) : null}
           </div>
         </div>

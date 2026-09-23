@@ -12,7 +12,7 @@ export default async function ClubLayout({
   const ctx = await getClubContext(club);
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex flex-1 flex-col">
       <AppNav
         clubSlug={ctx.club.slug}
         clubName={ctx.club.name}
@@ -20,7 +20,7 @@ export default async function ClubLayout({
         isCommittee={ctx.isCommittee}
         isWineMaster={ctx.isWineMaster}
       />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-[calc(5.25rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12 md:pt-10">
         {children}
       </main>
     </div>
