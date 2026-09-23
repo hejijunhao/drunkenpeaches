@@ -1,26 +1,19 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import {
-  CalendarDaysIcon,
-  CalendarOffIcon,
-  MapPinIcon,
-  PlusIcon,
-  UsersIcon,
-  UtensilsIcon,
-} from "lucide-react";
+import { ArrowUpRightIcon, CalendarOffIcon, PlusIcon } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
-import { fmtDate, fmtTime } from "@/lib/format";
+import { firstName, fmtDate, fmtTime, relativeDays } from "@/lib/format";
 import { seatsTaken, type Lunch, type Signup } from "@/lib/types";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
+import { RuleLabel, SectionHeading } from "@/components/section-heading";
 import { EmptyState } from "@/components/empty-state";
 import { SeatMeter } from "@/components/seat-meter";
 import { StatusBadge } from "@/components/status-badge";
 import { LunchCard } from "@/components/lunch-card";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Notice board" };
 
 type LunchRow = Lunch & { venues: { name: string } | null };
 
@@ -95,13 +88,24 @@ export default async function DashboardPage({
   }
 
   const comingUp = lunches.filter((l) => l.id !== next?.id);
+  const first = firstName(ctx.membership.full_name);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <PageHeader
         kicker={ctx.club.name}
-        title={ctx.membership.full_name.split(" ")[0] || "The notice board"}
-        description="Forthcoming luncheons and the list."
+        title={first ? `Good day, ${first}.` : "The notice board"}
+        description={
+          next ? (
+            <>
+              The next luncheon is{" "}
+              <span className="text-foreground">{fmtDate(next.lunch_date)}</span>
+              , {relativeDays(next.lunch_date)}.
+            </>
+          ) : (
+            "Nothing is on the calendar at present."
+          )
+        }
       >
         {ctx.isCommittee ? (
           <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
@@ -111,46 +115,70 @@ export default async function DashboardPage({
         ) : null}
       </PageHeader>
 
-      {/* Next-lunch hero */}
+      {/* Next luncheon */}
       {next ? (
-        <Card className="club-notice gap-0 p-5 sm:p-7">
-          <p className="club-kicker">Next luncheon</p>
-          <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-h2 text-foreground">{next.title}</h2>
-                <StatusBadge status={next.status} />
-                {mySignup ? <StatusBadge status={mySignup.status} /> : null}
-              </div>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p className="flex items-center gap-1.5">
-                  <CalendarDaysIcon className="size-4 shrink-0" />
-                  {fmtDate(next.lunch_date)} at {fmtTime(next.start_time)}
-                </p>
-                {next.venues ? (
-                  <p className="flex items-center gap-1.5">
-                    <MapPinIcon className="size-4 shrink-0" />
-                    {next.venues.name}
-                  </p>
-                ) : null}
-              </div>
+        <section
+          aria-labelledby="next-luncheon"
+          className="grid gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-[1fr_20rem]"
+        >
+          <div className="club-notice bg-card p-6 sm:p-8">
+            <p className="club-kicker">Next luncheon</p>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <h2 id="next-luncheon" className="text-h1 text-balance text-foreground">
+                {next.title}
+              </h2>
+              <StatusBadge status={next.status} />
             </div>
-            <div className="space-y-4 md:w-64">
-              <SeatMeter
-                taken={seatsTaken(nextSignups)}
-                capacity={next.capacity}
-                waitlisted={waitlistedCount(nextSignups)}
-              />
+            <dl className="mt-7 grid gap-x-8 gap-y-5 sm:grid-cols-3">
+              <div>
+                <dt className="club-kicker text-[0.625rem]">Date</dt>
+                <dd className="mt-1.5 text-[0.95rem] text-foreground">
+                  {fmtDate(next.lunch_date)}
+                </dd>
+              </div>
+              <div>
+                <dt className="club-kicker text-[0.625rem]">Time</dt>
+                <dd className="mt-1.5 text-[0.95rem] text-foreground">
+                  {fmtTime(next.start_time)}
+                </dd>
+              </div>
+              {next.venues ? (
+                <div>
+                  <dt className="club-kicker text-[0.625rem]">Table</dt>
+                  <dd className="mt-1.5 text-[0.95rem] text-foreground">
+                    {next.venues.name}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
+            {next.notes ? (
+              <p className="mt-6 max-w-prose text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
+                {next.notes}
+              </p>
+            ) : null}
+          </div>
+          <div className="flex flex-col justify-between gap-8 bg-card p-6 sm:p-8">
+            <SeatMeter
+              taken={seatsTaken(nextSignups)}
+              capacity={next.capacity}
+              waitlisted={waitlistedCount(nextSignups)}
+            />
+            <div className="space-y-3">
+              {mySignup ? (
+                <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                  Your place <StatusBadge status={mySignup.status} />
+                </p>
+              ) : null}
               <Button
                 className="w-full"
                 variant={mySignup ? "outline" : "default"}
                 render={<Link href={`/c/${slug}/lunches/${next.id}`} />}
               >
-                {mySignup ? "View my place" : "Consult & add your name"}
+                {mySignup ? "View the list" : "Add your name"}
               </Button>
             </div>
           </div>
-        </Card>
+        </section>
       ) : (
         <EmptyState
           icon={CalendarOffIcon}
@@ -160,6 +188,7 @@ export default async function DashboardPage({
               ? "Arrange the first lunch and release it once the restaurant is booked."
               : "The next luncheon will appear here when the committee releases it."
           }
+          aside={ctx.isCommittee ? undefined : "Patience is a club virtue."}
           action={
             ctx.isCommittee ? (
               <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
@@ -171,10 +200,10 @@ export default async function DashboardPage({
         />
       )}
 
-      {/* Coming up */}
+      {/* Also forthcoming */}
       {comingUp.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-h2 text-foreground">Also forthcoming</h2>
+        <section className="space-y-5">
+          <SectionHeading title="Also forthcoming" count={comingUp.length} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {comingUp.map((l) => {
               const s = signupsByLunch.get(l.id) ?? [];
@@ -196,43 +225,36 @@ export default async function DashboardPage({
         </section>
       ) : null}
 
-      {/* Committee stat tiles */}
+      {/* Committee figures */}
       {ctx.isCommittee ? (
-        <section className="grid gap-4 sm:grid-cols-2">
-          <Link href={`/c/${slug}/venues`} className="block">
-            <Card hover className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex size-11 shrink-0 items-center justify-center border border-primary/20 bg-primary/8 text-primary">
-                  <UtensilsIcon className="size-5" />
-                </div>
-                <div>
-                  <p className="font-heading text-2xl leading-none">
-                    {pipelineCount}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    venues under consideration
-                  </p>
-                </div>
+        <section className="space-y-5">
+          <RuleLabel>Committee</RuleLabel>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Link
+              href={`/c/${slug}/venues`}
+              className="group flex items-end justify-between rounded-lg border border-border bg-card p-6 transition-colors duration-(--duration-default) hover:border-foreground/40"
+            >
+              <div>
+                <p className="club-kicker">Venues under consideration</p>
+                <p className="text-numeral mt-3 text-[2.75rem] leading-none text-foreground">
+                  {pipelineCount}
+                </p>
               </div>
-            </Card>
-          </Link>
-          <Link href={`/c/${slug}/members`} className="block">
-            <Card hover className="p-5">
-              <div className="flex items-center gap-4">
-                <div className="flex size-11 shrink-0 items-center justify-center border border-primary/20 bg-primary/8 text-primary">
-                  <UsersIcon className="size-5" />
-                </div>
-                <div>
-                  <p className="font-heading text-2xl leading-none">
-                    {memberCount}
-                  </p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    members in good standing
-                  </p>
-                </div>
+              <ArrowUpRightIcon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+            </Link>
+            <Link
+              href={`/c/${slug}/members`}
+              className="group flex items-end justify-between rounded-lg border border-border bg-card p-6 transition-colors duration-(--duration-default) hover:border-foreground/40"
+            >
+              <div>
+                <p className="club-kicker">Members in good standing</p>
+                <p className="text-numeral mt-3 text-[2.75rem] leading-none text-foreground">
+                  {memberCount}
+                </p>
               </div>
-            </Card>
-          </Link>
+              <ArrowUpRightIcon className="size-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+            </Link>
+          </div>
         </section>
       ) : null}
     </div>

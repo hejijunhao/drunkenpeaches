@@ -4,36 +4,39 @@ import { cn } from "@/lib/utils";
 type Tone = "success" | "warning" | "danger" | "neutral" | "info";
 
 /**
- * Single source of truth: domain status → semantic tone. Drives the new
- * token-based `Badge` tones (theme-aware in light + dark) plus a leading dot so
- * color is never the only signal.
+ * Single source of truth: domain status → semantic tone + the word the club
+ * would actually use for it. Colour is never the only signal (dot + text).
  */
-const STATUS_TONE: Record<string, Tone> = {
+const STATUS: Record<string, { tone: Tone; label: string }> = {
   // lunches
-  draft: "neutral",
-  released: "success",
-  completed: "info",
-  cancelled: "danger",
+  draft: { tone: "neutral", label: "Draft" },
+  released: { tone: "success", label: "Open" },
+  completed: { tone: "info", label: "Held" },
+  cancelled: { tone: "danger", label: "Cancelled" },
   // signups
-  confirmed: "success",
-  waitlisted: "warning",
+  confirmed: { tone: "success", label: "Confirmed" },
+  waitlisted: { tone: "warning", label: "Waiting" },
   // memberships
-  invited: "warning",
-  active: "success",
-  resigned: "neutral",
-  lapsed: "neutral",
-  removed: "danger",
+  invited: { tone: "warning", label: "Invited" },
+  active: { tone: "success", label: "Active" },
+  resigned: { tone: "neutral", label: "Resigned" },
+  lapsed: { tone: "neutral", label: "Lapsed" },
+  removed: { tone: "danger", label: "Removed" },
   // venues
-  candidate: "neutral",
-  tasting: "warning",
-  approved: "success",
-  rejected: "danger",
-  archived: "neutral",
+  candidate: { tone: "neutral", label: "Candidate" },
+  tasting: { tone: "warning", label: "Tasting" },
+  approved: { tone: "success", label: "Approved" },
+  rejected: { tone: "danger", label: "Declined" },
+  archived: { tone: "neutral", label: "Archived" },
   // tastings
-  pending: "neutral",
-  go: "success",
-  no_go: "danger",
+  pending: { tone: "neutral", label: "Pending" },
+  go: { tone: "success", label: "Go" },
+  no_go: { tone: "danger", label: "No-go" },
 };
+
+export function statusLabel(status: string) {
+  return STATUS[status]?.label ?? status.replace("_", "-");
+}
 
 export function StatusBadge({
   status,
@@ -42,10 +45,10 @@ export function StatusBadge({
   status: string;
   className?: string;
 }) {
-  const tone = STATUS_TONE[status] ?? "neutral";
+  const entry = STATUS[status] ?? { tone: "neutral" as Tone, label: status };
   return (
-    <Badge tone={tone} dot className={cn("capitalize", className)}>
-      {status.replace("_", "-")}
+    <Badge tone={entry.tone} dot className={cn(className)}>
+      {entry.label}
     </Badge>
   );
 }

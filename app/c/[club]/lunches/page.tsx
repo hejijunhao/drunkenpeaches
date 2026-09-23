@@ -6,11 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { seatsTaken, type Lunch, type Signup } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeading } from "@/components/section-heading";
 import { EmptyState } from "@/components/empty-state";
 import { LunchCard } from "@/components/lunch-card";
 import { ErrorBanner } from "@/components/error-banner";
 
-export const metadata: Metadata = { title: "Lunches" };
+export const metadata: Metadata = { title: "Luncheons" };
 
 type LunchRow = Lunch & { venues: { name: string } | null };
 type SignupLite = Pick<
@@ -75,12 +76,12 @@ export default async function LunchesPage({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <ErrorBanner message={error} />
       <PageHeader
         kicker="The book"
         title="Luncheons"
-        description="Forthcoming and past tables."
+        description="Forthcoming tables, and those already held."
       >
         {ctx.isCommittee ? (
           <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
@@ -90,8 +91,8 @@ export default async function LunchesPage({
         ) : null}
       </PageHeader>
 
-      <section className="space-y-3">
-        <h2 className="text-h2 text-foreground">Forthcoming</h2>
+      <section className="space-y-5">
+        <SectionHeading title="Forthcoming" count={upcoming.length} />
         {upcoming.length === 0 ? (
           <EmptyState
             icon={CalendarOffIcon}
@@ -101,6 +102,7 @@ export default async function LunchesPage({
                 ? "Arrange a lunch and release it once the restaurant is booked."
                 : "The committee will post the next luncheon here."
             }
+            aside={ctx.isCommittee ? undefined : "Patience is a club virtue."}
             action={
               ctx.isCommittee ? (
                 <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
@@ -118,8 +120,8 @@ export default async function LunchesPage({
       </section>
 
       {past.length > 0 ? (
-        <section className="space-y-3">
-          <h2 className="text-h2 text-foreground">Past &amp; cancelled</h2>
+        <section className="space-y-5">
+          <SectionHeading title="Past & cancelled" count={past.length} />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {past.map(card)}
           </div>

@@ -1,13 +1,18 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
-import { UserPlusIcon } from "lucide-react";
 import { inviteMemberAction } from "@/app/actions/members";
 import type { FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -37,9 +42,13 @@ export function InviteForm({ slug }: { slug: string }) {
   }, [pending, state]);
 
   return (
-    <Card>
+    <Card className="club-notice">
       <CardHeader>
-        <CardTitle>Propose a member</CardTitle>
+        <CardTitle serif>Propose a member</CardTitle>
+        <CardDescription>
+          They receive a letter to set a password and complete their
+          particulars. Membership is by invitation only.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form
@@ -68,17 +77,14 @@ export function InviteForm({ slug }: { slug: string }) {
             </Select>
           </div>
           <Button type="submit" loading={pending}>
-            <UserPlusIcon />
             Send invitation
           </Button>
-          <div className="sm:col-span-4">
-            <FormError message={state.error} />
-          </div>
+          {state.error ? (
+            <div className="sm:col-span-4">
+              <FormError message={state.error} />
+            </div>
+          ) : null}
         </form>
-        <p className="mt-3 text-xs text-muted-foreground">
-          They will receive a letter to set a password and complete their
-          particulars. Membership is by invitation only.
-        </p>
       </CardContent>
     </Card>
   );

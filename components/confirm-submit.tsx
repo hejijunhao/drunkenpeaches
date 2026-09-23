@@ -13,6 +13,8 @@ interface ConfirmSubmitProps
   confirmTitle?: string;
   /** Confirm button label (defaults to the trigger's text). */
   confirmLabel?: string;
+  /** Red confirm button in the modal. Defaults to `variant === "destructive"`. */
+  destructive?: boolean;
 }
 
 /**
@@ -27,6 +29,7 @@ export function ConfirmSubmit({
   confirmMessage,
   confirmTitle = "Please confirm",
   confirmLabel,
+  destructive,
   variant = "default",
   children,
   ...props
@@ -52,7 +55,7 @@ export function ConfirmSubmit({
         confirmLabel={
           confirmLabel ?? (typeof children === "string" ? children : "Confirm")
         }
-        destructive={variant === "destructive"}
+        destructive={destructive ?? variant === "destructive"}
         onConfirm={() => {
           setOpen(false);
           formRef.current?.requestSubmit();

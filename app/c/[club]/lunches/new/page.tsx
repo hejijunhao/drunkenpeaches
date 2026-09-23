@@ -6,7 +6,7 @@ import { LunchForm } from "../lunch-form";
 import { PageHeader } from "@/components/page-header";
 import type { Venue } from "@/lib/types";
 
-export const metadata: Metadata = { title: "New lunch" };
+export const metadata: Metadata = { title: "Arrange a lunch" };
 
 export default async function NewLunchPage({
   params,
@@ -27,11 +27,11 @@ export default async function NewLunchPage({
     .order("name");
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         kicker="Committee"
         title="Arrange a lunch"
-        description="Book the restaurant first. Capacity is taken from that booking."
+        description="It starts as a draft. Release it to members from the lunch page once the table is booked."
       />
       <LunchForm
         slug={slug}

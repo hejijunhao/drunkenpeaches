@@ -13,7 +13,8 @@ interface AuthShellProps {
 }
 
 /**
- * Auth layout: a quiet form column on paper, oxblood panel on large screens.
+ * The entrance: a form column on cream; on wide screens, an oxblood panel with
+ * the seal and a line from the minutes.
  */
 export function AuthShell({
   title,
@@ -23,7 +24,7 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <main className="flex min-h-dvh flex-1">
-      <div className="flex flex-1 flex-col px-5 py-6 sm:px-10 sm:py-8">
+      <div className="flex flex-1 flex-col px-5 py-5 sm:px-10 sm:py-7">
         <div className="flex items-center justify-between">
           <Link href="/" aria-label="Drunken Peaches home">
             <BrandWordmark size="sm" />
@@ -31,39 +32,47 @@ export function AuthShell({
           <ThemeToggle />
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-10">
+        <div className="flex flex-1 items-center justify-center py-12">
           <div className="w-full max-w-sm">
             <p className="club-kicker">Drunken Peaches</p>
-            <h1 className="text-h1 mt-3 text-foreground">{title}</h1>
+            <h1 className="text-h1 mt-4 text-balance text-foreground">{title}</h1>
             {description ? (
-              <p className="mt-2 text-[0.9375rem] leading-relaxed text-muted-foreground">
+              <p className="mt-3 text-[0.95rem] leading-relaxed text-pretty text-muted-foreground">
                 {description}
               </p>
             ) : null}
-            <div className="mt-8">{children}</div>
+            <div className="club-rule mt-7 w-10 bg-foreground/50" />
+            <div className="mt-7">{children}</div>
             {footer ? (
-              <div className="mt-6 space-y-2 text-sm leading-relaxed text-muted-foreground">
+              <div className="mt-8 space-y-2.5 text-sm leading-relaxed text-muted-foreground">
                 {footer}
               </div>
             ) : null}
           </div>
         </div>
+
+        <p className="club-kicker text-[0.625rem]">Each club is its own private chapter.</p>
       </div>
 
-      <aside className="relative hidden w-[40%] max-w-xl flex-col justify-between overflow-hidden bg-primary px-12 py-14 text-primary-foreground lg:flex">
-        <BrandMark size="lg" className="border-primary-foreground/30 bg-transparent text-primary-foreground" />
-        <blockquote className="relative max-w-sm">
-          <p className="font-heading text-[2rem] leading-[1.15] font-medium text-balance">
+      <aside className="relative hidden w-[42%] max-w-2xl flex-col justify-between overflow-hidden bg-primary p-12 text-primary-foreground lg:flex">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-5 border border-primary-foreground/20"
+        />
+        <BrandMark size="lg" className="relative text-primary-foreground/90" />
+        <blockquote className="relative max-w-md">
+          <p className="text-aside text-[2.15rem] leading-[1.15] text-balance">
             A society of friends, a serious cellar, and a standing reservation.
           </p>
-          <footer className="mt-6 text-sm leading-relaxed text-primary-foreground/70">
-            The list, the venues, the wine — kept so the committee may return
-            to the table.
+          <footer className="mt-7 text-sm leading-relaxed text-primary-foreground/70">
+            The list, the venues, the wine — kept so the committee may return to
+            the table.
           </footer>
         </blockquote>
-        <p className="relative text-xs tracking-wide text-primary-foreground/55">
-          Each club is its own private chapter.
-        </p>
+        <div className="relative flex items-center justify-between text-[0.625rem] font-medium tracking-[0.18em] text-primary-foreground/60 uppercase">
+          <span>Drunken Peaches</span>
+          <span>By invitation</span>
+        </div>
       </aside>
     </main>
   );

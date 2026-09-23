@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { CalendarDaysIcon, MapPinIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { fmtDateShort } from "@/lib/format";
-import { Card } from "@/components/ui/card";
-import { StatusBadge } from "@/components/status-badge";
-import { SeatMeter } from "@/components/seat-meter";
+import { dateParts } from "@/lib/format";
+import { StatusBadge, statusLabel } from "@/components/status-badge";
 
 export interface LunchCardProps {
   href: string;
@@ -21,54 +18,104 @@ export interface LunchCardProps {
   className?: string;
 }
 
-/** Notice-board lunch card — dashboard and the lunches list. */
+/**
+ * A programme entry: a calendar tile on the left, the luncheon on the right.
+ * Used on the notice board and the luncheons page.
+ */
 export function LunchCard({
   href,
   title,
   status,
   date,
   venueName,
-  taken,
+  taken = 0,
   capacity,
   waitlisted = 0,
   mySignupStatus,
   className,
 }: LunchCardProps) {
+  const d = dateParts(date);
+  const past = status === "completed" || status === "cancelled";
+  const pct =
+    capacity && capacity > 0
+      ? Math.min(100, Math.round((taken / capacity) * 100))
+      : 0;
+
   return (
-    <Link href={href} className={cn("block h-full", className)}>
-      <Card hover className="club-notice h-full gap-3 p-5">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-heading text-[1.05rem] leading-snug text-foreground">
+    <Link
+      href={href}
+      className={cn(
+        "group/lunch flex h-full gap-4 rounded-lg border border-border bg-card p-4 transition-colors duration-(--duration-default) ease-(--ease-out-quint) hover:border-foreground/40 sm:gap-5 sm:p-5",
+        past && "bg-transparent",
+        className
+      )}
+    >
+      <div
+        className={cn(
+          "flex w-12 shrink-0 flex-col items-center border-r border-border pr-4 sm:w-14 sm:pr-5",
+          past && "opacity-60"
+        )}
+      >
+        <span className="text-[0.625rem] font-medium tracking-[0.16em] text-muted-foreground uppercase">
+          {d.month}
+        </span>
+        <span className="text-numeral mt-1 text-[1.9rem] leading-none text-foreground">
+          {d.day}
+        </span>
+        <span className="mt-1.5 text-[0.625rem] font-medium tracking-[0.14em] text-muted-foreground uppercase">
+          {d.weekday}
+        </span>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="text-h3 text-balance leading-snug text-foreground">
             {title}
           </h3>
-          <StatusBadge status={status} />
+          <StatusBadge status={status} className="mt-0.5 shrink-0" />
         </div>
-        <div className="space-y-1 text-sm text-muted-foreground">
-          <p className="flex items-center gap-1.5">
-            <CalendarDaysIcon className="size-3.5 shrink-0" />
-            {fmtDateShort(date)}
-          </p>
-          {venueName ? (
-            <p className="flex items-center gap-1.5">
-              <MapPinIcon className="size-3.5 shrink-0" />
-              {venueName}
+        {venueName ? (
+          <p className="truncate text-sm text-muted-foreground">{venueName}</p>
+        ) : null}
+
+        <div className="mt-auto space-y-2 pt-2">
+          {capacity != null ? (
+            <>
+              <div className="flex items-baseline justify-between gap-3 text-xs text-muted-foreground">
+                <span>
+                  <span className="text-numeral text-base leading-none text-foreground">
+                    {taken}
+                  </span>{" "}
+                  of {capacity} places
+                  {waitlisted > 0 ? (
+                    <span className="text-warning"> · {waitlisted} waiting</span>
+                  ) : null}
+                </span>
+                {mySignupStatus ? (
+                  <span className="shrink-0 text-foreground">
+                    You: {statusLabel(mySignupStatus)}
+                  </span>
+                ) : null}
+              </div>
+              {!past ? (
+                <div className="h-px w-full bg-border">
+                  <div
+                    className={cn(
+                      "h-full",
+                      taken > capacity ? "bg-destructive" : "bg-primary"
+                    )}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              ) : null}
+            </>
+          ) : mySignupStatus ? (
+            <p className="text-xs text-foreground">
+              You: {statusLabel(mySignupStatus)}
             </p>
           ) : null}
         </div>
-        {capacity != null ? (
-          <SeatMeter
-            taken={taken ?? 0}
-            capacity={capacity}
-            waitlisted={waitlisted}
-            size="sm"
-          />
-        ) : null}
-        {mySignupStatus ? (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Your place: <StatusBadge status={mySignupStatus} />
-          </div>
-        ) : null}
-      </Card>
+      </div>
     </Link>
   );
 }

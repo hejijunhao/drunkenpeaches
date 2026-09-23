@@ -4,43 +4,49 @@ import { cn } from "@/lib/utils";
 
 interface EmptyStateProps {
   /** lucide icon component, e.g. `CalendarOff`. */
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   description?: React.ReactNode;
-  /** Optional CTA (button/link). */
+  /** A line of italic serif — the cheeky bit. */
+  aside?: React.ReactNode;
   action?: React.ReactNode;
   className?: string;
 }
 
-/**
- * Quiet empty state — club notice, not a dashed startup illustration.
- */
+/** A quiet notice in a hairline frame. */
 export function EmptyState({
   icon: Icon,
   title,
   description,
+  aside,
   action,
   className,
 }: EmptyStateProps) {
   return (
     <div
       className={cn(
-        "flex flex-col items-start rounded-lg border border-border bg-card px-5 py-8 club-notice",
+        "flex flex-col items-center rounded-lg border border-border bg-card/60 px-6 py-12 text-center",
         className
       )}
     >
       {Icon ? (
-        <Icon className="mb-3 size-5 text-muted-foreground" />
+        <Icon
+          className="mb-4 size-5 text-muted-foreground"
+          strokeWidth={1.25}
+        />
       ) : null}
-      <h3 className="font-heading text-lg font-medium text-foreground">
-        {title}
-      </h3>
+      <h3 className="text-h3 text-balance text-foreground">{title}</h3>
       {description ? (
-        <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-pretty text-muted-foreground">
           {description}
         </p>
       ) : null}
-      {action ? <div className="mt-5">{action}</div> : null}
+      {aside ? (
+        <p className="text-aside mt-3 text-[0.95rem] text-muted-foreground">
+          {aside}
+        </p>
+      ) : null}
+      {action ? <div className="mt-6">{action}</div> : null}
     </div>
   );
 }

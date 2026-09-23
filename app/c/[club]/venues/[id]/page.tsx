@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { MapPinIcon, PhoneIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import { fmtDateShort } from "@/lib/format";
@@ -13,11 +13,16 @@ import {
   deleteVenueAction,
 } from "@/app/actions/venues";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -28,6 +33,7 @@ import {
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/error-banner";
 import { ConfirmSubmit } from "@/components/confirm-submit";
+import { RuleLabel, SectionHeading } from "@/components/section-heading";
 import { VenueForm } from "../venue-form";
 
 export const metadata: Metadata = { title: "Venue" };
@@ -75,118 +81,127 @@ export default async function VenueDetailPage({
   }[];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       <ErrorBanner message={error} />
 
       {/* Header + status toolbar */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-h1 text-foreground">{venue.name}</h1>
-            <StatusBadge status={venue.status} />
+      <header className="space-y-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0 space-y-4">
+            <p className="club-kicker">Venue</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <h1 className="text-h1 text-balance text-foreground">{venue.name}</h1>
+              <StatusBadge status={venue.status} />
+            </div>
+            <dl className="flex flex-wrap gap-x-12 gap-y-4">
+              {venue.address ? (
+                <div>
+                  <dt className="club-kicker text-[0.625rem]">Address</dt>
+                  <dd className="mt-1.5 text-[0.95rem] text-foreground">
+                    {venue.address}
+                  </dd>
+                </div>
+              ) : null}
+              {venue.contact ? (
+                <div>
+                  <dt className="club-kicker text-[0.625rem]">Contact</dt>
+                  <dd className="mt-1.5 text-[0.95rem] text-foreground">
+                    {venue.contact}
+                  </dd>
+                </div>
+              ) : null}
+              {venue.default_capacity ? (
+                <div>
+                  <dt className="club-kicker text-[0.625rem]">Private room</dt>
+                  <dd className="mt-1.5 text-[0.95rem] text-foreground">
+                    About {venue.default_capacity}
+                  </dd>
+                </div>
+              ) : null}
+            </dl>
           </div>
-          <div className="space-y-1 text-sm text-muted-foreground">
-            {venue.address ? (
-              <p className="flex items-center gap-2">
-                <MapPinIcon className="size-4 shrink-0" />
-                {venue.address}
-              </p>
-            ) : null}
-            {venue.contact ? (
-              <p className="flex items-center gap-2">
-                <PhoneIcon className="size-4 shrink-0" />
-                {venue.contact}
-              </p>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {venue.status === "candidate" ? (
-            <form
-              action={setVenueStatusAction.bind(null, slug, venue.id, "tasting")}
-            >
-              <Button type="submit" variant="outline">
-                Move to tasting
-              </Button>
-            </form>
-          ) : null}
-          {venue.status === "candidate" || venue.status === "tasting" ? (
-            <>
+          <div className="flex flex-wrap gap-2">
+            {venue.status === "candidate" ? (
               <form
-                action={setVenueStatusAction.bind(
-                  null,
-                  slug,
-                  venue.id,
-                  "approved"
-                )}
+                action={setVenueStatusAction.bind(null, slug, venue.id, "tasting")}
               >
-                <Button type="submit">Approve venue</Button>
+                <Button type="submit" variant="outline">
+                  Move to tasting
+                </Button>
               </form>
-              <form
-                action={setVenueStatusAction.bind(
-                  null,
-                  slug,
-                  venue.id,
-                  "rejected"
-                )}
-              >
-                <ConfirmSubmit
-                  confirmTitle="Reject venue?"
-                  confirmMessage={`Reject ${venue.name}? You can still find it under rejected venues.`}
-                  confirmLabel="Reject"
-                  variant="destructive"
+            ) : null}
+            {venue.status === "candidate" || venue.status === "tasting" ? (
+              <>
+                <form
+                  action={setVenueStatusAction.bind(
+                    null,
+                    slug,
+                    venue.id,
+                    "approved"
+                  )}
                 >
-                  Reject
-                </ConfirmSubmit>
-              </form>
-            </>
-          ) : null}
-          {venue.status === "approved" ? (
-            <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
-              Book a lunch here
-            </Button>
-          ) : null}
-          {venue.status === "rejected" || venue.status === "archived" ? (
-            <form
-              action={setVenueStatusAction.bind(
-                null,
-                slug,
-                venue.id,
-                "candidate"
-              )}
-            >
-              <Button type="submit" variant="outline">
-                Back to candidates
+                  <Button type="submit">Approve venue</Button>
+                </form>
+                <form
+                  action={setVenueStatusAction.bind(
+                    null,
+                    slug,
+                    venue.id,
+                    "rejected"
+                  )}
+                >
+                  <ConfirmSubmit
+                    confirmTitle="Decline this venue?"
+                    confirmMessage={`Decline ${venue.name}? It stays on file under declined venues.`}
+                    confirmLabel="Decline"
+                    variant="destructive"
+                  >
+                    Decline
+                  </ConfirmSubmit>
+                </form>
+              </>
+            ) : null}
+            {venue.status === "approved" ? (
+              <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
+                Arrange a lunch here
               </Button>
-            </form>
-          ) : null}
+            ) : null}
+            {venue.status === "rejected" || venue.status === "archived" ? (
+              <form
+                action={setVenueStatusAction.bind(
+                  null,
+                  slug,
+                  venue.id,
+                  "candidate"
+                )}
+              >
+                <Button type="submit" variant="outline">
+                  Back to candidates
+                </Button>
+              </form>
+            ) : null}
+          </div>
         </div>
-      </div>
+        <div className="club-rule-strong" />
+      </header>
 
       {/* Details */}
-      <section className="space-y-3">
-        <h2 className="text-h2 text-foreground">Details</h2>
-        <VenueForm slug={slug} venue={venue} />
-      </section>
-
-      <Separator />
+      <VenueForm slug={slug} venue={venue} />
 
       {/* Tastings */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-h2 text-foreground">Committee tastings</h2>
-          <p className="text-sm text-muted-foreground">
-            Record the evaluation visit and the feedback you&apos;d share with
-            the restaurant — it informs the go / no-go.
-          </p>
-        </div>
+      <section className="space-y-6">
+        <SectionHeading
+          title="Committee tastings"
+          count={tastings.length}
+          description="The evaluation visit and the notes you'd share with the house. It informs the go or no-go."
+        />
 
         {tastings.map((t) => (
           <Card key={t.id}>
-            <CardContent className="pt-(--card-spacing)">
+            <CardContent>
               <form
                 action={updateTastingAction.bind(null, slug, venue.id, t.id)}
-                className="space-y-4"
+                className="space-y-5"
               >
                 <div className="grid gap-4 sm:grid-cols-[auto_1fr_auto] sm:items-end">
                   <div className="space-y-2">
@@ -214,12 +229,12 @@ export default async function VenueDetailPage({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-center pb-1">
+                  <div className="flex items-center pb-2.5">
                     <StatusBadge status={t.outcome} />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`feedback-${t.id}`}>Feedback</Label>
+                  <Label htmlFor={`feedback-${t.id}`}>Notes</Label>
                   <Textarea
                     id={`feedback-${t.id}`}
                     name="feedback"
@@ -238,7 +253,10 @@ export default async function VenueDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Add a tasting</CardTitle>
+            <CardTitle>Record a tasting</CardTitle>
+            <CardDescription>
+              Add the visit now and complete the notes afterwards.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form
@@ -254,7 +272,7 @@ export default async function VenueDetailPage({
                 <Input
                   id="newFeedback"
                   name="feedback"
-                  placeholder="Booked for 6 committee members…"
+                  placeholder="Booked for six of the committee…"
                 />
               </div>
               <Button type="submit" variant="outline">
@@ -268,46 +286,44 @@ export default async function VenueDetailPage({
 
       {/* Lunches at this venue */}
       {lunches.length > 0 ? (
-        <>
-          <Separator />
-          <section className="space-y-3">
-            <h2 className="text-h2 text-foreground">Lunches at this venue</h2>
-            <ul className="space-y-2">
-              {lunches.map((l) => (
-                <li key={l.id} className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground tabular-nums">
-                    {fmtDateShort(l.lunch_date)}
-                  </span>
-                  <Link
-                    href={`/c/${slug}/lunches/${l.id}`}
-                    className="font-medium underline-offset-4 hover:underline"
-                  >
-                    {l.title}
-                  </Link>
-                  <StatusBadge status={l.status} />
-                </li>
-              ))}
-            </ul>
-          </section>
-        </>
+        <section className="space-y-4">
+          <SectionHeading title="Luncheons held here" count={lunches.length} />
+          <ul className="divide-y divide-border">
+            {lunches.map((l) => (
+              <li key={l.id} className="flex items-center gap-4 py-3 text-sm">
+                <span className="text-numeral w-28 shrink-0 text-muted-foreground">
+                  {fmtDateShort(l.lunch_date)}
+                </span>
+                <Link
+                  href={`/c/${slug}/lunches/${l.id}`}
+                  className="club-link min-w-0 flex-1 truncate text-foreground"
+                >
+                  {l.title}
+                </Link>
+                <StatusBadge status={l.status} />
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
-      <Separator />
-      <form action={deleteVenueAction.bind(null, slug, venue.id)}>
-        <ConfirmSubmit
-          confirmTitle={lunches.length > 0 ? "Archive venue?" : "Delete venue?"}
-          confirmMessage={
-            lunches.length > 0
-              ? `${venue.name} has lunch history, so it will be archived instead of deleted.`
-              : `This permanently deletes ${venue.name}.`
-          }
-          confirmLabel={lunches.length > 0 ? "Archive venue" : "Delete venue"}
-          variant="destructive"
-        >
-          <Trash2Icon />
-          {lunches.length > 0 ? "Archive venue" : "Delete venue"}
-        </ConfirmSubmit>
-      </form>
+      <section className="space-y-6">
+        <RuleLabel>Housekeeping</RuleLabel>
+        <form action={deleteVenueAction.bind(null, slug, venue.id)}>
+          <ConfirmSubmit
+            confirmTitle={lunches.length > 0 ? "Archive venue?" : "Delete venue?"}
+            confirmMessage={
+              lunches.length > 0
+                ? `${venue.name} has lunch history, so it will be archived rather than deleted.`
+                : `This permanently deletes ${venue.name}.`
+            }
+            confirmLabel={lunches.length > 0 ? "Archive venue" : "Delete venue"}
+            variant="destructive"
+          >
+            {lunches.length > 0 ? "Archive venue" : "Delete venue"}
+          </ConfirmSubmit>
+        </form>
+      </section>
     </div>
   );
 }

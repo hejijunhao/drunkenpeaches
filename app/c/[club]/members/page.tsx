@@ -9,6 +9,7 @@ import { resendInviteAction } from "@/app/actions/members";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageHeader } from "@/components/page-header";
+import { SectionHeading } from "@/components/section-heading";
 import { DataList, type DataListColumn } from "@/components/data-list";
 import { StatusBadge } from "@/components/status-badge";
 import { ErrorBanner } from "@/components/error-banner";
@@ -39,6 +40,9 @@ export default async function MembersPage({
     ? all
     : all.filter((m) => m.status === "active");
   const activeCount = all.filter((m) => m.status === "active").length;
+  const committeeCount = all.filter(
+    (m) => m.status === "active" && m.role === "committee"
+  ).length;
 
   const columns: DataListColumn<Membership>[] = [
     {
@@ -46,15 +50,16 @@ export default async function MembersPage({
       header: "Name",
       primary: true,
       cell: (m) => (
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <Avatar size="sm">
-            <AvatarFallback className="bg-primary/10 text-xs text-primary">
-              {initials(m.full_name || m.email)}
-            </AvatarFallback>
+            <AvatarFallback>{initials(m.full_name || m.email)}</AvatarFallback>
           </Avatar>
-          <span className="font-medium">{m.full_name || "—"}</span>
+          <span className="text-foreground">{m.full_name || "—"}</span>
           {m.wine_master ? (
-            <WineIcon className="size-3.5 text-gold" aria-label="Wine Master" />
+            <WineIcon
+              className="size-3.5 text-gold"
+              aria-label="Wine Master"
+            />
           ) : null}
         </div>
       ),
@@ -66,7 +71,7 @@ export default async function MembersPage({
     },
     {
       key: "phone",
-      header: "Phone",
+      header: "Telephone",
       cell: (m) => (
         <span className="text-muted-foreground">{m.phone ?? "—"}</span>
       ),
@@ -74,13 +79,15 @@ export default async function MembersPage({
     {
       key: "role",
       header: "Role",
-      cell: (m) => <span className="capitalize">{m.role}</span>,
+      cell: (m) => (
+        <span className="capitalize text-muted-foreground">{m.role}</span>
+      ),
     },
     ...(ctx.isCommittee
       ? [
           {
             key: "status",
-            header: "Status",
+            header: "Standing",
             cell: (m: Membership) => <StatusBadge status={m.status} />,
           },
           {
@@ -93,13 +100,18 @@ export default async function MembersPage({
               <div className="flex justify-end gap-1">
                 {m.status === "invited" ? (
                   <form action={resendInviteAction.bind(null, slug, m.id)}>
-                    <Button variant="ghost" size="sm" type="submit">
-                      Re-send invite
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      type="submit"
+                      className="text-muted-foreground"
+                    >
+                      Re-send invitation
                     </Button>
                   </form>
                 ) : null}
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   render={<Link href={`/c/${slug}/members/${m.id}`} />}
                 >
@@ -113,24 +125,43 @@ export default async function MembersPage({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
       <ErrorBanner message={error} />
       <PageHeader
         kicker="The book"
         title="Members"
-        description={`${activeCount} member${activeCount === 1 ? "" : "s"} in good standing`}
+        description={
+          <>
+            <span className="text-foreground">{activeCount}</span> in good
+            standing
+            {committeeCount > 0 ? (
+              <>
+                , of whom{" "}
+                <span className="text-foreground">{committeeCount}</span>{" "}
+                {committeeCount === 1 ? "sits" : "sit"} on the committee.
+              </>
+            ) : (
+              "."
+            )}
+          </>
+        }
       />
 
       {ctx.isCommittee ? <InviteForm slug={slug} /> : null}
 
-      <DataList columns={columns} rows={visible} rowKey={(m) => m.id} />
-
-      {ctx.isCommittee ? (
-        <p className="text-xs text-muted-foreground">
-          Members are never erased — mark them resigned, lapsed or removed and
-          their attendance remains in the book.
-        </p>
-      ) : null}
+      <section className="space-y-5">
+        <SectionHeading
+          title={ctx.isCommittee ? "The roll" : "The roll"}
+          count={visible.length}
+        />
+        <DataList columns={columns} rows={visible} rowKey={(m) => m.id} />
+        {ctx.isCommittee ? (
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Members are never erased. Mark them resigned, lapsed or removed and
+            their attendance remains in the book.
+          </p>
+        ) : null}
+      </section>
     </div>
   );
 }

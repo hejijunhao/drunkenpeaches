@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { getClubContext } from "@/lib/club-context";
 import { fmtDateShort, initials } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -50,47 +49,56 @@ export default async function ProfilePage({
     }));
 
   return (
-    <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-wrap items-center gap-4">
-        <Avatar size="lg">
-          <AvatarFallback className="bg-primary/10 text-primary">
-            {initials(ctx.membership.full_name || ctx.membership.email)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="space-y-1.5">
-          <h1 className="text-h1 text-foreground">My particulars</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>
+    <div className="space-y-10">
+      <header className="space-y-6">
+        <div className="flex flex-wrap items-center gap-5">
+          <Avatar size="lg">
+            <AvatarFallback>
+              {initials(ctx.membership.full_name || ctx.membership.email)}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 space-y-2.5">
+            <p className="club-kicker">
               {ctx.club.name} · member since{" "}
               {fmtDateShort(ctx.membership.joined_on)}
-            </span>
-            {ctx.membership.role === "committee" ? (
-              <Badge variant="secondary">Committee</Badge>
-            ) : null}
-            {ctx.membership.wine_master ? (
-              <Badge tone="info">Wine Master</Badge>
-            ) : null}
+            </p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <h1 className="text-h1 text-foreground">
+                {ctx.membership.full_name || "My particulars"}
+              </h1>
+              <span className="flex items-center gap-1.5">
+                {ctx.membership.role === "committee" ? (
+                  <Badge variant="outline">Committee</Badge>
+                ) : null}
+                {ctx.membership.wine_master ? (
+                  <Badge
+                    variant="outline"
+                    className="border-gold/60 text-gold-foreground dark:text-gold"
+                  >
+                    Wine Master
+                  </Badge>
+                ) : null}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+        <div className="club-rule-strong" />
+      </header>
 
       <ProfileForm slug={slug} membership={ctx.membership} />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-        </CardHeader>
-        <CardContent className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-foreground">Theme</p>
-            <p className="text-xs text-muted-foreground">
-              Light, dark, or match your system.
-            </p>
-          </div>
+      <section className="grid gap-5 border-t border-border pt-6 md:grid-cols-[13rem_minmax(0,1fr)] md:gap-12 md:pt-8">
+        <div>
+          <h2 className="text-h3 text-foreground">Appearance</h2>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Cream by day, the cellar by night.
+          </p>
+        </div>
+        <div className="flex items-center justify-between gap-4 rounded-sm border border-border px-4 py-3 text-sm">
+          <span className="text-foreground">Theme</span>
           <ThemeToggle />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
       <AttendanceHistory items={attendance} />
     </div>

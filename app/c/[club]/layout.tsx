@@ -20,9 +20,15 @@ export default async function ClubLayout({
         isCommittee={ctx.isCommittee}
         isWineMaster={ctx.isWineMaster}
       />
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-[calc(5.25rem+env(safe-area-inset-bottom))] pt-6 md:px-6 md:pb-12 md:pt-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-8 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-6 md:pt-12 md:pb-16">
         {children}
       </main>
+      <footer className="hidden md:block">
+        <div className="mx-auto flex max-w-6xl items-center justify-between border-t border-border px-6 py-6 text-[0.625rem] font-medium tracking-[0.18em] text-muted-foreground uppercase">
+          <span>Drunken Peaches</span>
+          <span>The book is kept.</span>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -4,9 +4,57 @@ All notable changes to Drunken Peaches are recorded here. Newest first.
 
 ## Index
 
+- **[0.4.0](#040--2026-09-23)** — Club stationery: engraved peach seal, Newsreader + Hanken Grotesk, hairline rules instead of shadows, stamp badges, ledger tables, two-column forms, chapter headings.
 - **[0.3.0](#030--2026-09-23)** — Quiet-luxury members' club redesign: mobile-first shell, oxblood-on-paper tokens, club-secretary copy, peach emoji retired.
 - **[0.2.0](#020--2026-06-13)** — Front-end redesign: "editorial wine-cellar" design system, light + dark themes, new component library, and a full screen-by-screen UI overhaul.
 - **[0.1.0](#010--2026-06-13)** — Initial build: multi-tenant club lunch & member management (auth, members, venues, lunches, sign-ups/waitlist, wine, email, reminder cron).
+
+---
+
+## 0.4.0 — 2026-09-23
+
+A full visual pass to take the front end from "tidy shadcn" to a members'
+club's own stationery — the kind a London club would have printed. Front-end
+only: no schema, RLS, server-action, or routing changes.
+
+- **Seal.** A peach drawn as a single-weight engraving inside a double ring
+  replaces the "P" square (`components/brand-mark.tsx`). The wordmark sets
+  *Drunken* in italic — the one permitted joke. Sizes from `xs` to `hero`.
+- **Type.** Newsreader (with the `opsz` axis and italics) for titles, numerals
+  and asides; **Hanken Grotesk** replaces Source Sans 3 for the interface.
+  New utilities: `.text-h3`, `.text-numeral`, `.text-aside`; `.text-display`
+  and `.text-h1` drop to weight 400 for size.
+- **Tokens.** Laid-cream paper, oxblood ink, brass accent; `--radius` 0.25rem
+  (stationery corners); shadows retired at rest (`shadow-soft` is a hairline),
+  kept for overlays. Dark mode: deep oxblood primary with cream text, not a
+  lifted pink.
+- **Rules.** `.club-rule-strong`, `.club-rule-double` (masthead), `.club-link`
+  (hairline underline), `RuleLabel` (a small-cap label centred on a rule).
+- **Primitives.** Button (flat oxblood, hairline outline, brass `gold`
+  variant, text-only destructive), Card (hairline, small-cap `CardTitle` with a
+  `serif` option), Badge (a stamp: letter-spaced caps, no fill), Input /
+  Textarea / Select (hairline on card, ink on focus), Label (small caps),
+  Table (ruled ledger, flush outer cells), Dialog, Avatar (roundel with serif
+  initials), Skeleton.
+- **Shared.** `PageHeader` (kicker, serif title, rule beneath, `aside` slot),
+  `SectionHeading` (serif count), `FormSection`/`FormFooter` (two-column ruled
+  forms), `LunchCard` (calendar tile + programme entry), `SeatMeter` (serif
+  numeral, hairline track, "n remaining / n waiting / Full"), `StatusBadge`
+  (club words: Open, Held, Waiting, Declined), `EmptyState` (with an italic
+  `aside`), `DataList` (ruled on phones too), `PageHeaderSkeleton`/`RowsSkeleton`.
+- **Chrome.** Masthead with small-cap links, roundel avatar and a double rule;
+  phone rail in small caps; a "more" sheet with the member's name and role;
+  a small-cap footer ("The book is kept.").
+- **Screens.** Landing (display hero, hero seal, numbered notices, a line from
+  the club history); auth (framed oxblood panel); notice board ("Good day,
+  Philip.", ruled next-luncheon panel, committee figures in serif); lunch
+  detail (definition-list meta, numbered list and waiting list, committee
+  section under a rule label, "For the restaurant" copy block); members (the
+  roll, "Propose a member"); venues (I / II / III pipeline); cellar (brass-framed
+  "Record a wine"); settings, profile and member edit as sectioned forms.
+- **Copy.** Cheek in the right places only: "Named, we are told, after an
+  incident. The minutes do not record which."; "Patience is a club virtue.";
+  "A situation the Wine Master will wish to correct."
 
 ---
 

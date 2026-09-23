@@ -1,7 +1,6 @@
 "use client";
 
 import { useActionState, useRef, useEffect } from "react";
-import { PlusIcon } from "lucide-react";
 import { createWineAction } from "@/app/actions/wine";
 import type { FormState } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ export function WineForm({ slug }: { slug: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const submitted = useRef(false);
 
-  useSuccessToast(pending, state.error, "Wine added to the catalogue");
+  useSuccessToast(pending, state.error, "Recorded in the cellar");
 
   useEffect(() => {
     if (submitted.current && !pending && !state.error) {
@@ -52,7 +51,7 @@ export function WineForm({ slug }: { slug: string }) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="cellar">Club cellar</SelectItem>
-            <SelectItem value="restaurant">Restaurant list</SelectItem>
+            <SelectItem value="restaurant">House list</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -61,14 +60,15 @@ export function WineForm({ slug }: { slug: string }) {
         <Input id="notes" name="notes" placeholder="Drinking window, style" />
       </div>
       <div className="flex items-end sm:col-span-1">
-        <Button type="submit" loading={pending} className="w-full">
-          <PlusIcon />
-          Add
+        <Button type="submit" variant="gold" loading={pending} className="w-full">
+          Record
         </Button>
       </div>
-      <div className="sm:col-span-6">
-        <FormError message={state.error} />
-      </div>
+      {state.error ? (
+        <div className="sm:col-span-6">
+          <FormError message={state.error} />
+        </div>
+      ) : null}
     </form>
   );
 }

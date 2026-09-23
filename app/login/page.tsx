@@ -22,7 +22,7 @@ export default async function LoginPage({
           <p>
             <Link
               href="/auth/forgot"
-              className="text-foreground underline underline-offset-4 hover:text-primary"
+              className="club-link text-foreground"
             >
               Forgotten your password?
             </Link>
@@ -31,7 +31,7 @@ export default async function LoginPage({
             Opening a new chapter?{" "}
             <Link
               href="/signup"
-              className="text-foreground underline underline-offset-4 hover:text-primary"
+              className="club-link text-foreground"
             >
               Establish it here
             </Link>
