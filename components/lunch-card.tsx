@@ -18,6 +18,7 @@ export interface LunchCardProps {
   capacity?: number | null;
   waitlisted?: number;
   mySignupStatus?: string | null;
+  phaseLabel?: string | null;
   className?: string;
 }
 
@@ -32,6 +33,7 @@ export function LunchCard({
   capacity,
   waitlisted = 0,
   mySignupStatus,
+  phaseLabel,
   className,
 }: LunchCardProps) {
   return (
@@ -62,6 +64,9 @@ export function LunchCard({
             waitlisted={waitlisted}
             size="sm"
           />
+        ) : null}
+        {phaseLabel ? (
+          <p className="text-xs text-muted-foreground">{phaseLabel}</p>
         ) : null}
         {mySignupStatus ? (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">

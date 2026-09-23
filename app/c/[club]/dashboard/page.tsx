@@ -11,7 +11,13 @@ import {
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
 import { fmtDate, fmtTime } from "@/lib/format";
-import { seatsTaken, type Lunch, type Signup } from "@/lib/types";
+import { guestPolicy, seatsTaken, type Lunch, type Signup } from "@/lib/types";
+import {
+  findNextOpenLunch,
+  lunchCardPhaseLabel,
+  resolveSignupPhase,
+  signupWindowCopy,
+} from "@/lib/signup-phases";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
@@ -73,6 +79,24 @@ export default async function DashboardPage({
           s.membership_id === ctx.membership.id && s.status !== "cancelled"
       )
     : undefined;
+  const nextPhase = next ? resolveSignupPhase(next) : null;
+  const nextCopy = next && nextPhase ? signupWindowCopy(next, nextPhase) : null;
+  const nextOpen = findNextOpenLunch(lunches);
+  const heroCta = (() => {
+    if (!next) return "Consult the luncheon";
+    if (mySignup) return "View my place";
+    if (nextPhase === "closed") return "The list is closed";
+    if (nextPhase === "not_open") {
+      return nextCopy?.title ?? "The list is not yet open";
+    }
+    if (nextPhase === "committee" && !ctx.isCommittee) {
+      return "Committee priority";
+    }
+    if (!ctx.isCommittee && nextOpen && nextOpen.id !== next.id) {
+      return "Consult the luncheon";
+    }
+    return "Consult & add your name";
+  })();
 
   // Committee extras
   let pipelineCount = 0;
@@ -133,6 +157,12 @@ export default async function DashboardPage({
                     {next.venues.name}
                   </p>
                 ) : null}
+                {nextCopy ? (
+                  <p className="max-w-md text-sm text-muted-foreground">
+                    {nextCopy.title}
+                    {nextCopy.detail ? ` — ${nextCopy.detail}` : ""}
+                  </p>
+                ) : null}
               </div>
             </div>
             <div className="space-y-4 md:w-64">
@@ -146,7 +176,7 @@ export default async function DashboardPage({
                 variant={mySignup ? "outline" : "default"}
                 render={<Link href={`/c/${slug}/lunches/${next.id}`} />}
               >
-                {mySignup ? "View my place" : "Consult & add your name"}
+                {heroCta}
               </Button>
             </div>
           </div>
@@ -189,6 +219,14 @@ export default async function DashboardPage({
                   taken={seatsTaken(s)}
                   capacity={l.capacity}
                   waitlisted={waitlistedCount(s)}
+                  phaseLabel={
+                    l.status === "released"
+                      ? lunchCardPhaseLabel(l, {
+                          guestsAllowed: guestPolicy(ctx.club, l).allowed,
+                          isNextOpen: nextOpen?.id === l.id,
+                        })
+                      : null
+                  }
                 />
               );
             })}

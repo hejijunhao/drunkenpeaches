@@ -44,6 +44,7 @@ export default async function EditLunchPage({
       />
       <LunchForm
         slug={slug}
+        club={ctx.club}
         lunch={lunch as Lunch}
         venues={(venues ?? []) as Pick<Venue, "id" | "name" | "status" | "default_capacity">[]}
       />

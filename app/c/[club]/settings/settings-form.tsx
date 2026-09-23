@@ -45,21 +45,79 @@ export function SettingsForm({ slug, club }: { slug: string; club: Club }) {
         <CardHeader>
           <CardTitle>Sign-ups</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <Label htmlFor="cutoffDays">Default sign-up cutoff (days before)</Label>
-          <Input
-            id="cutoffDays"
-            name="cutoffDays"
-            type="number"
-            min={0}
-            max={30}
-            defaultValue={club.signup_cutoff_days}
-            className="w-24"
-          />
-          <p className="text-xs text-muted-foreground">
-            After the cutoff, sign-ups and cancellations lock so you can confirm
-            the final headcount with the restaurant. Each lunch can override it.
-          </p>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <Label htmlFor="committeePriorityDays">
+              Committee-only window (days)
+            </Label>
+            <Input
+              id="committeePriorityDays"
+              name="committeePriorityDays"
+              type="number"
+              min={0}
+              max={60}
+              defaultValue={club.committee_priority_days ?? 2}
+              className="w-24"
+            />
+            <p className="text-xs text-muted-foreground">
+              From the moment sign-ups open, only the committee may add their
+              names. After this many days the list opens to the membership.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="membersOnlyDays">Members window (days)</Label>
+            <Input
+              id="membersOnlyDays"
+              name="membersOnlyDays"
+              type="number"
+              min={0}
+              max={90}
+              defaultValue={club.members_only_days ?? 14}
+              className="w-24"
+            />
+            <p className="text-xs text-muted-foreground">
+              After the committee window, members may add their own names.
+              Guests stay closed for this many days.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="guestsPhaseDays">Guests window (days)</Label>
+            <Input
+              id="guestsPhaseDays"
+              name="guestsPhaseDays"
+              type="number"
+              min={0}
+              max={90}
+              defaultValue={club.guests_phase_days ?? 14}
+              className="w-24"
+            />
+            <p className="text-xs text-muted-foreground">
+              After the members window, guests may be added (if the club or
+              lunch allows them) until the cutoff below.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cutoffDays">
+              Default sign-up cutoff (days before the lunch)
+            </Label>
+            <Input
+              id="cutoffDays"
+              name="cutoffDays"
+              type="number"
+              min={0}
+              max={30}
+              defaultValue={club.signup_cutoff_days}
+              className="w-24"
+            />
+            <p className="text-xs text-muted-foreground">
+              After the cutoff, sign-ups and cancellations lock so you can
+              confirm the final headcount with the restaurant. Each lunch can
+              override the dates. Default timeline: open → committee{" "}
+              {club.committee_priority_days}d → members{" "}
+              {club.members_only_days}d → guests {club.guests_phase_days}d →
+              cutoff {club.signup_cutoff_days}d before the table sits.
+            </p>
+          </div>
         </CardContent>
       </Card>
 

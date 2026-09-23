@@ -21,6 +21,11 @@ import {
   type LunchWine,
 } from "@/lib/types";
 import {
+  findNextOpenLunch,
+  resolveSignupPhase,
+  signupWindowCopy,
+} from "@/lib/signup-phases";
+import {
   releaseLunchAction,
   completeLunchAction,
   cancelLunchAction,
@@ -97,8 +102,22 @@ export default async function LunchDetailPage({
   const seatsLeft = Math.max(0, lunch.capacity - taken);
   const overCapacity = taken > lunch.capacity;
   const policy = guestPolicy(ctx.club, lunch);
-  const cutoffPassed =
-    !!lunch.signup_cutoff_at && new Date(lunch.signup_cutoff_at) < new Date();
+  const now = new Date();
+  const phase = resolveSignupPhase(lunch, now);
+  const cutoffPassed = phase === "closed";
+  const windowCopy = signupWindowCopy(lunch, phase);
+
+  const today = now.toISOString().slice(0, 10);
+  const { data: upcomingData } = await supabase
+    .from("lunches")
+    .select("*")
+    .eq("club_id", ctx.club.id)
+    .eq("status", "released")
+    .gte("lunch_date", today)
+    .order("lunch_date")
+    .order("start_time");
+  const nextOpen = findNextOpenLunch((upcomingData ?? []) as Lunch[], now);
+  const isNextOpenLunch = nextOpen?.id === lunch.id;
   const mySignup =
     signups.find(
       (s) => s.membership_id === ctx.membership.id && s.status !== "cancelled"
@@ -181,11 +200,42 @@ export default async function LunchDetailPage({
                 {lunch.venues.address ? ` · ${lunch.venues.address}` : ""}
               </p>
             ) : null}
-            {lunch.signup_cutoff_at && lunch.status === "released" ? (
+            {lunch.status === "released" && windowCopy ? (
+              <p className="flex items-start gap-2">
+                <LockIcon className="mt-0.5 size-4 shrink-0" />
+                <span>
+                  {windowCopy.title}
+                  {windowCopy.detail ? ` — ${windowCopy.detail}` : ""}
+                </span>
+              </p>
+            ) : lunch.signup_cutoff_at && lunch.status === "released" ? (
               <p className="flex items-center gap-2">
                 <LockIcon className="size-4 shrink-0" />
                 The list {cutoffPassed ? "closed on" : "closes at"}{" "}
                 {fmtDateTime(lunch.signup_cutoff_at)}
+              </p>
+            ) : null}
+            {lunch.status === "released" &&
+            (lunch.signup_opens_at ||
+              lunch.members_open_at ||
+              lunch.guests_open_at) ? (
+              <p className="text-xs text-muted-foreground">
+                {[
+                  lunch.signup_opens_at
+                    ? `Opens ${fmtDateTime(lunch.signup_opens_at)}`
+                    : null,
+                  lunch.members_open_at
+                    ? `Members ${fmtDateTime(lunch.members_open_at)}`
+                    : null,
+                  lunch.guests_open_at
+                    ? `Guests ${fmtDateTime(lunch.guests_open_at)}`
+                    : null,
+                  lunch.signup_cutoff_at
+                    ? `Cutoff ${fmtDateTime(lunch.signup_cutoff_at)}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
             ) : null}
           </div>
@@ -221,6 +271,17 @@ export default async function LunchDetailPage({
           maxGuests={policy.maxPerMember}
           seatsLeft={seatsLeft}
           cutoffPassed={cutoffPassed}
+          phase={phase}
+          phaseTitle={windowCopy?.title ?? null}
+          phaseDetail={windowCopy?.detail ?? null}
+          isCommittee={ctx.isCommittee}
+          isNextOpenLunch={isNextOpenLunch || ctx.isCommittee}
+          nextOpenHref={
+            nextOpen && nextOpen.id !== lunch.id
+              ? `/c/${slug}/lunches/${nextOpen.id}`
+              : null
+          }
+          nextOpenTitle={nextOpen?.title ?? null}
           mySignup={
             mySignup
               ? {

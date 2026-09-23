@@ -15,7 +15,15 @@ import {
   sendLunchCancelled,
   sendLunchChanged,
 } from "@/lib/email";
-import type { Lunch, PromotedMember } from "@/lib/types";
+import {
+  fillMissingPhaseTimestamps,
+  findNextOpenLunch,
+  fromDatetimeLocalValue,
+  guestEditBlockReason,
+  memberSignupBlockReason,
+  validatePhaseOrder,
+} from "@/lib/signup-phases";
+import type { Club, Lunch, PromotedMember } from "@/lib/types";
 
 // ---------- helpers ----------------------------------------------------------
 
@@ -65,19 +73,36 @@ const lunchSchema = z.object({
   lunchDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Pick a date"),
   startTime: z.string().regex(/^\d{2}:\d{2}/, "Pick a time"),
   capacity: z.coerce.number().int().min(0, "Capacity must be 0 or more"),
+  signupOpensAt: z.string().optional(),
+  membersOpenAt: z.string().optional(),
+  guestsOpenAt: z.string().optional(),
   cutoffAt: z.string().optional(),
   guestsMode: z.enum(["inherit", "yes", "no"]),
   maxGuests: z.coerce.number().int().min(0).optional(),
   notes: z.string().max(2000).optional(),
 });
 
-function parseLunchForm(formData: FormData) {
+function parseOptionalIso(
+  raw: string | undefined,
+  label: string
+): { ok: true; value: string | null } | { ok: false; error: string } {
+  const s = (raw ?? "").trim();
+  if (!s) return { ok: true, value: null };
+  const iso = fromDatetimeLocalValue(s);
+  if (!iso) return { ok: false, error: `Invalid ${label}` };
+  return { ok: true, value: iso };
+}
+
+function parseLunchForm(formData: FormData, club: Club) {
   const parsed = lunchSchema.safeParse({
     title: formData.get("title"),
     venueId: String(formData.get("venueId") ?? ""),
     lunchDate: formData.get("lunchDate"),
     startTime: formData.get("startTime") || "12:30",
     capacity: formData.get("capacity"),
+    signupOpensAt: String(formData.get("signupOpensAt") ?? ""),
+    membersOpenAt: String(formData.get("membersOpenAt") ?? ""),
+    guestsOpenAt: String(formData.get("guestsOpenAt") ?? ""),
     cutoffAt: String(formData.get("cutoffAt") ?? ""),
     guestsMode: formData.get("guestsMode") ?? "inherit",
     maxGuests: formData.get("maxGuests") || undefined,
@@ -85,6 +110,30 @@ function parseLunchForm(formData: FormData) {
   });
   if (!parsed.success) return { error: parsed.error.issues[0].message } as const;
   const d = parsed.data;
+
+  const opens = parseOptionalIso(d.signupOpensAt, "sign-up open time");
+  if (!opens.ok) return { error: opens.error };
+  const members = parseOptionalIso(d.membersOpenAt, "members-open time");
+  if (!members.ok) return { error: members.error };
+  const guests = parseOptionalIso(d.guestsOpenAt, "guests-open time");
+  if (!guests.ok) return { error: guests.error };
+  const cutoff = parseOptionalIso(d.cutoffAt, "sign-up cutoff");
+  if (!cutoff.ok) return { error: cutoff.error };
+
+  const phases = fillMissingPhaseTimestamps(
+    {
+      lunch_date: d.lunchDate,
+      start_time: d.startTime,
+      signup_opens_at: opens.value,
+      members_open_at: members.value,
+      guests_open_at: guests.value,
+      signup_cutoff_at: cutoff.value,
+    },
+    club
+  );
+  const orderError = validatePhaseOrder(phases);
+  if (orderError) return { error: orderError } as const;
+
   return {
     row: {
       title: d.title,
@@ -92,13 +141,29 @@ function parseLunchForm(formData: FormData) {
       lunch_date: d.lunchDate,
       start_time: d.startTime,
       capacity: d.capacity,
-      signup_cutoff_at: d.cutoffAt ? new Date(d.cutoffAt).toISOString() : null,
+      signup_opens_at: phases.signup_opens_at,
+      members_open_at: phases.members_open_at,
+      guests_open_at: phases.guests_open_at,
+      signup_cutoff_at: phases.signup_cutoff_at,
       guests_allowed: d.guestsMode === "inherit" ? null : d.guestsMode === "yes",
       max_guests_per_member:
         d.guestsMode === "inherit" ? null : (d.maxGuests ?? null),
       notes: d.notes || null,
     },
   } as const;
+}
+
+async function loadUpcomingReleased(ctx: Ctx) {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await ctx.supabase
+    .from("lunches")
+    .select("*")
+    .eq("club_id", ctx.club.id)
+    .eq("status", "released")
+    .gte("lunch_date", today)
+    .order("lunch_date")
+    .order("start_time");
+  return (data ?? []) as Lunch[];
 }
 
 export type FormState = { error?: string };
@@ -111,7 +176,7 @@ export async function createLunchAction(
   let id: string;
   try {
     const ctx = await requireCommittee(slug);
-    const parsed = parseLunchForm(formData);
+    const parsed = parseLunchForm(formData, ctx.club);
     if ("error" in parsed) return parsed;
     const { data, error } = await ctx.supabase
       .from("lunches")
@@ -135,7 +200,7 @@ export async function updateLunchAction(
 ): Promise<FormState> {
   try {
     const ctx = await requireCommittee(slug);
-    const parsed = parseLunchForm(formData);
+    const parsed = parseLunchForm(formData, ctx.club);
     if ("error" in parsed) return parsed;
 
     const before = await getLunchForEmail(ctx, lunchId);
@@ -202,19 +267,17 @@ export async function releaseLunchAction(slug: string, lunchId: string) {
     if (!lunch) throw new Error("Lunch not found");
     if (lunch.status !== "draft") throw new Error("Only drafts can be released");
 
-    const cutoff =
-      lunch.signup_cutoff_at ??
-      new Date(
-        new Date(`${lunch.lunch_date}T${lunch.start_time}Z`).getTime() -
-          ctx.club.signup_cutoff_days * 24 * 60 * 60 * 1000
-      ).toISOString();
+    const phases = fillMissingPhaseTimestamps(lunch as Lunch, ctx.club);
 
     const { error } = await ctx.supabase
       .from("lunches")
       .update({
         status: "released",
         released_at: new Date().toISOString(),
-        signup_cutoff_at: cutoff,
+        signup_opens_at: phases.signup_opens_at,
+        members_open_at: phases.members_open_at,
+        guests_open_at: phases.guests_open_at,
+        signup_cutoff_at: phases.signup_cutoff_at,
       })
       .eq("id", lunchId);
     if (error) throw new Error(error.message);
@@ -354,6 +417,23 @@ export async function signUpAction(
     const guestCount = Number(formData.get("guestCount") ?? 0) || 0;
     const guestNames = String(formData.get("guestNames") ?? "").trim() || null;
 
+    const upcoming = await loadUpcomingReleased(ctx);
+    const lunchRow =
+      upcoming.find((l) => l.id === lunchId) ??
+      ((
+        await ctx.supabase.from("lunches").select("*").eq("id", lunchId).single()
+      ).data as Lunch | null);
+    if (!lunchRow) return { error: "Lunch not found" };
+    const nextOpen = findNextOpenLunch(upcoming);
+    const blocked = memberSignupBlockReason({
+      lunch: lunchRow,
+      club: ctx.club,
+      isCommittee: ctx.membership.role === "committee",
+      nextOpenLunchId: nextOpen?.id ?? null,
+      guestCount,
+    });
+    if (blocked) return { error: blocked };
+
     const { data: signup, error } = await ctx.supabase.rpc(
       "sign_up_for_lunch",
       {
@@ -398,9 +478,32 @@ export async function updateMyGuestsAction(
 ): Promise<FormState> {
   try {
     const ctx = await requireMember(slug);
+    const nextGuestCount = Number(formData.get("guestCount") ?? 0) || 0;
+    const { data: lunchRow } = await ctx.supabase
+      .from("lunches")
+      .select("*")
+      .eq("id", lunchId)
+      .single();
+    if (!lunchRow) return { error: "Lunch not found" };
+    const { data: existing } = await ctx.supabase
+      .from("signups")
+      .select("guest_count")
+      .eq("lunch_id", lunchId)
+      .eq("membership_id", ctx.membership.id)
+      .in("status", ["confirmed", "waitlisted"])
+      .maybeSingle();
+    const blocked = guestEditBlockReason({
+      lunch: lunchRow as Lunch,
+      club: ctx.club,
+      isCommittee: ctx.membership.role === "committee",
+      currentGuestCount: existing?.guest_count ?? 0,
+      nextGuestCount,
+    });
+    if (blocked) return { error: blocked };
+
     const { error } = await ctx.supabase.rpc("update_my_guests", {
       p_lunch: lunchId,
-      p_guest_count: Number(formData.get("guestCount") ?? 0) || 0,
+      p_guest_count: nextGuestCount,
       p_guest_names: String(formData.get("guestNames") ?? "").trim() || null,
     });
     if (error) return { error: error.message };

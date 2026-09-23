@@ -46,15 +46,21 @@ Tenant = **club/chapter**. Isolation is enforced at the **database** via Postgre
 ## Data model (implemented — `supabase/migrations/00001_init.sql`)
 
 - **clubs** — the tenant. Club-level settings: `guests_allowed`,
-  `max_guests_per_member`, `signup_cutoff_days` (default cutoff).
+  `max_guests_per_member`, `signup_cutoff_days` (default cutoff), plus
+  `committee_priority_days` / `members_only_days` / `guests_phase_days`
+  (default 2 / 14 / 14) for the three-phase sign-up windows
+  (`supabase/migrations/00002_signup_phases.sql`).
 - **memberships** — `user ↔ club ↔ role` plus the member's club-scoped profile
   (name, phone, dietary). `role` (member/committee), `wine_master` flag,
   `status` (invited/active/resigned/lapsed/removed — never hard-deleted).
 - **venues** — first-class pipeline entity: candidate → tasting → approved
   (→ rejected/archived). **tastings** hang off a venue (date, feedback, go/no-go).
 - **lunches** — venue, date/time, fixed `capacity`, `status`
-  (draft → released → completed / cancelled), `signup_cutoff_at`, per-lunch
-  guest overrides (null = inherit club).
+  (draft → released → completed / cancelled), `signup_opens_at` /
+  `members_open_at` / `guests_open_at` / `signup_cutoff_at`, per-lunch
+  guest overrides (null = inherit club). Phase logic lives in
+  `lib/signup-phases.ts` and the `sign_up_for_lunch` /
+  `update_my_guests` RPCs.
 - **signups** — one per member per lunch: confirmed/waitlisted/cancelled,
   `guest_count` (guests consume seats), `created_at` is the FCFS order,
   `attended` for history.
