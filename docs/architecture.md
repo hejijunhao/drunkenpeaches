@@ -66,28 +66,34 @@ Tenant = **club/chapter**. Isolation is enforced at the **database** via Postgre
   `attended` for history.
 - **wines** + **lunch_wines** — lightweight catalogue & per-lunch selection
   with pairing notes (committee-only; no member-facing wine data).
+- **lunch_roles** — speaking roles for a lunch (`food_1` / `food_2` /
+  `wine_1` / `wine_2`). One confirmed attendee per role; one role per
+  person. Schema and RPCs in `supabase/migrations/00003_lunch_roles.sql`.
 
 ### Business rules live in SQL functions (SECURITY DEFINER)
 
-Sign-up, cancel, waitlist auto-promotion, capacity change and cutoff
-enforcement are Postgres functions (`sign_up_for_lunch`, `cancel_my_signup`,
-`promote_from_waitlist`, `set_lunch_capacity`, `cancel_lunch`, …) so they are
-atomic (row-locked) and cannot be bypassed from any client. `signups` has no
-direct write policies at all. Promotion functions return who was promoted so
-the app layer sends the notification emails.
+Sign-up, cancel, waitlist auto-promotion, capacity change, cutoff
+enforcement and speaking-role assignment are Postgres functions
+(`sign_up_for_lunch`, `cancel_my_signup`, `promote_from_waitlist`,
+`set_lunch_capacity`, `cancel_lunch`, `assign_lunch_role`,
+`clear_lunch_role`, …) so they are atomic (row-locked) and cannot be
+bypassed from any client. `signups` and `lunch_roles` have no direct write
+policies at all. Promotion functions return who was promoted so the app
+layer sends the notification emails.
 
 ### RLS summary
 
 - Helpers: `is_member_of(club)`, `is_committee_of(club)` (security definer to
   avoid policy recursion).
-- Members read their club, roster, venues, non-draft lunches and signups;
-  committee additionally reads drafts/tastings/wines and writes everything.
+- Members read their club, roster, venues, non-draft lunches, signups and
+  speaking roles; committee additionally reads drafts/tastings/wines and
+  writes everything (role writes only via RPCs).
 - Club creation and member invites run server-side with the service-role key.
 
 ### Email (Resend, implemented)
 
 Invite, sign-up confirmed, waitlisted, promoted from waitlist, lunch
-changed/cancelled, password reset — plus a daily Vercel cron
+changed/cancelled, speaking-role assignment, password reset — plus a daily Vercel cron
 (`/api/cron/reminders`) for the ~2-days-before reminder. No email on release
 (per vision). Emails no-op gracefully when `RESEND_API_KEY` is unset.
 

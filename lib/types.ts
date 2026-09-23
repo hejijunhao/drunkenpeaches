@@ -15,6 +15,7 @@ export type TastingOutcome = "pending" | "go" | "no_go";
 export type LunchStatus = "draft" | "released" | "completed" | "cancelled";
 export type SignupStatus = "confirmed" | "waitlisted" | "cancelled";
 export type WineSource = "cellar" | "restaurant";
+export type LunchCritiqueRole = "food_1" | "food_2" | "wine_1" | "wine_2";
 
 export interface Club {
   id: string;
@@ -121,6 +122,17 @@ export interface LunchWine {
   wine_id: string;
   pairing_notes: string | null;
   created_at: string;
+}
+
+export interface LunchRole {
+  id: string;
+  club_id: string;
+  lunch_id: string;
+  role: LunchCritiqueRole;
+  membership_id: string;
+  assigned_by: string | null;
+  assigned_at: string;
+  notified_at: string | null;
 }
 
 /** Row returned by waitlist-promoting SQL functions. */

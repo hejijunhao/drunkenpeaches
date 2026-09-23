@@ -4,10 +4,35 @@ All notable changes to Drunken Peaches are recorded here. Newest first.
 
 ## Index
 
+- **[0.5.0](#050--2026-09-23)** — Committee assigns Food 1 / Food 2 / Wine 1 / Wine 2 speaking roles on a lunch; assignees are written to and see the duty in-app.
 - **[0.4.0](#040--2026-09-23)** — Configurable three-phase lunch sign-up windows (committee → members → guests), with a next-open-lunch rule for members.
 - **[0.3.0](#030--2026-09-23)** — Quiet-luxury members' club redesign: mobile-first shell, oxblood-on-paper tokens, club-secretary copy, peach emoji retired.
 - **[0.2.0](#020--2026-06-13)** — Front-end redesign: "editorial wine-cellar" design system, light + dark themes, new component library, and a full screen-by-screen UI overhaul.
 - **[0.1.0](#010--2026-06-13)** — Initial build: multi-tenant club lunch & member management (auth, members, venues, lunches, sign-ups/waitlist, wine, email, reminder cron).
+
+---
+
+## 0.5.0 — 2026-09-23
+
+Speaking roles for the two waves of a luncheon. The committee names who
+presents food and wine in each half; the assignee is told before the day.
+
+- **Roles:** Food 1 and Wine 1 (first half), Food 2 and Wine 2 (second half).
+  One confirmed attendee per role; one role per person on a lunch. Clearing
+  and reassigning are allowed.
+- **Schema:** `lunch_roles` (`supabase/migrations/00003_lunch_roles.sql`)
+  with unique `(lunch_id, role)` and `(lunch_id, membership_id)`. Members
+  may read roles on non-draft lunches; only committee may write, and only
+  through `assign_lunch_role` / `clear_lunch_role`. A trigger drops the
+  role if the holder is no longer confirmed.
+- **Committee:** four slots on the lunch with assign / reassign / clear
+  against the confirmed list. Enforcement is in Postgres, not the UI.
+- **Members:** labels beside names; a notice on the lunch (“You are Food 2
+  …”) and on the dashboard / lunch cards when the current member holds a
+  forthcoming role.
+- **Email:** assignment (and reassignment to a new person) sends a
+  secretary-tone note via the existing Resend helper, with a link to the
+  lunch. Degrades to the console when `RESEND_API_KEY` is unset.
 
 ---
 

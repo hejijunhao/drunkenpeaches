@@ -14,7 +14,14 @@ import {
   sendPromoted,
   sendLunchCancelled,
   sendLunchChanged,
+  sendCritiqueRoleAssigned,
 } from "@/lib/email";
+import {
+  critiqueRoleDuty,
+  critiqueRoleLabel,
+  isLunchCritiqueRole,
+} from "@/lib/lunch-roles";
+import type { LunchRole } from "@/lib/types";
 import {
   fillMissingPhaseTimestamps,
   findNextOpenLunch,
@@ -629,5 +636,95 @@ export async function markAttendanceAction(
     err = errorMessage(e);
   }
   revalidatePath(lunchPath(slug, lunchId));
+  if (err) redirect(`${lunchPath(slug, lunchId)}?error=${encodeURIComponent(err)}`);
+}
+
+function revalidateLunchSurfaces(slug: string, lunchId: string) {
+  revalidatePath(lunchPath(slug, lunchId));
+  revalidatePath(lunchPath(slug));
+  revalidatePath(`/c/${slug}/dashboard`);
+}
+
+/** Committee assigns a speaking role to a confirmed attendee. */
+export async function assignLunchRoleAction(
+  slug: string,
+  lunchId: string,
+  formData: FormData
+) {
+  let err: string | null = null;
+  try {
+    const ctx = await requireCommittee(slug);
+    const role = String(formData.get("role") ?? "");
+    const membershipId = String(formData.get("membershipId") ?? "");
+    if (!isLunchCritiqueRole(role)) throw new Error("Pick a speaking role");
+    if (!membershipId) throw new Error("Pick a confirmed attendee");
+
+    const { data: existing } = await ctx.supabase
+      .from("lunch_roles")
+      .select("membership_id")
+      .eq("lunch_id", lunchId)
+      .eq("role", role)
+      .maybeSingle();
+
+    const { data, error } = await ctx.supabase.rpc("assign_lunch_role", {
+      p_lunch: lunchId,
+      p_role: role,
+      p_membership: membershipId,
+    });
+    if (error) throw new Error(error.message);
+
+    const assigned = data as LunchRole | null;
+    const holderChanged =
+      !!assigned && assigned.membership_id !== existing?.membership_id;
+    if (holderChanged) {
+      const [lunch, member] = await Promise.all([
+        getLunchForEmail(ctx, lunchId),
+        ctx.supabase
+          .from("memberships")
+          .select("email, full_name")
+          .eq("id", assigned.membership_id)
+          .single(),
+      ]);
+      if (lunch && member.data) {
+        const appUrl =
+          process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+        await sendCritiqueRoleAssigned({
+          to: member.data.email,
+          name: member.data.full_name,
+          clubName: ctx.club.name,
+          lunchTitle: lunch.title,
+          lunchDate: lunch.lunch_date,
+          venueName: lunch.venues?.name,
+          roleLabel: critiqueRoleLabel(role),
+          duty: critiqueRoleDuty(role),
+          lunchUrl: `${appUrl}${lunchPath(slug, lunchId)}`,
+        });
+      }
+    }
+  } catch (e) {
+    err = errorMessage(e);
+  }
+  revalidateLunchSurfaces(slug, lunchId);
+  if (err) redirect(`${lunchPath(slug, lunchId)}?error=${encodeURIComponent(err)}`);
+}
+
+export async function clearLunchRoleAction(
+  slug: string,
+  lunchId: string,
+  role: string
+) {
+  let err: string | null = null;
+  try {
+    const ctx = await requireCommittee(slug);
+    if (!isLunchCritiqueRole(role)) throw new Error("Unknown speaking role");
+    const { error } = await ctx.supabase.rpc("clear_lunch_role", {
+      p_lunch: lunchId,
+      p_role: role,
+    });
+    if (error) throw new Error(error.message);
+  } catch (e) {
+    err = errorMessage(e);
+  }
+  revalidateLunchSurfaces(slug, lunchId);
   if (err) redirect(`${lunchPath(slug, lunchId)}?error=${encodeURIComponent(err)}`);
 }

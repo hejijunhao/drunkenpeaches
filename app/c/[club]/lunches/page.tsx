@@ -3,7 +3,14 @@ import type { Metadata } from "next";
 import { CalendarOffIcon, PlusIcon } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
-import { guestPolicy, seatsTaken, type Lunch, type Signup } from "@/lib/types";
+import {
+  guestPolicy,
+  seatsTaken,
+  type Lunch,
+  type LunchRole,
+  type Signup,
+} from "@/lib/types";
+import { critiqueRoleLabel } from "@/lib/lunch-roles";
 import {
   findNextOpenLunch,
   lunchCardPhaseLabel,
@@ -35,20 +42,31 @@ export default async function LunchesPage({
   const supabase = await createClient();
   const today = new Date().toISOString().slice(0, 10);
 
-  const [{ data: lunchData }, { data: signupData }] = await Promise.all([
-    supabase
-      .from("lunches")
-      .select("*, venues(name)")
-      .eq("club_id", ctx.club.id)
-      .order("lunch_date", { ascending: false }),
-    supabase
-      .from("signups")
-      .select("id, lunch_id, membership_id, status, guest_count")
-      .eq("club_id", ctx.club.id),
-  ]);
+  const [{ data: lunchData }, { data: signupData }, { data: roleData }] =
+    await Promise.all([
+      supabase
+        .from("lunches")
+        .select("*, venues(name)")
+        .eq("club_id", ctx.club.id)
+        .order("lunch_date", { ascending: false }),
+      supabase
+        .from("signups")
+        .select("id, lunch_id, membership_id, status, guest_count")
+        .eq("club_id", ctx.club.id),
+      supabase
+        .from("lunch_roles")
+        .select("lunch_id, role, membership_id")
+        .eq("club_id", ctx.club.id)
+        .eq("membership_id", ctx.membership.id),
+    ]);
 
   const lunches = (lunchData ?? []) as LunchRow[];
   const signups = (signupData ?? []) as SignupLite[];
+  const myRoles = (roleData ?? []) as Pick<
+    LunchRole,
+    "lunch_id" | "role" | "membership_id"
+  >[];
+  const myRoleByLunch = new Map(myRoles.map((r) => [r.lunch_id, r.role]));
 
   const upcoming = lunches
     .filter((l) => l.lunch_date >= today && l.status !== "cancelled")
@@ -75,6 +93,11 @@ export default async function LunchesPage({
         capacity={l.capacity}
         waitlisted={ls.filter((s) => s.status === "waitlisted").length}
         mySignupStatus={mine?.status}
+        myRoleLabel={
+          myRoleByLunch.has(l.id)
+            ? critiqueRoleLabel(myRoleByLunch.get(l.id)!)
+            : null
+        }
         phaseLabel={
           l.status === "released"
             ? lunchCardPhaseLabel(l, {
