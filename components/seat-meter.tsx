@@ -42,7 +42,7 @@ export function SeatMeter({
             >
               {taken}
             </span>{" "}
-            <span className="text-muted-foreground">/ {capacity} seats</span>
+            <span className="text-muted-foreground">/ {capacity} places</span>
           </span>
           {waitlisted > 0 ? (
             <span className="text-xs font-medium text-warning">
@@ -56,7 +56,7 @@ export function SeatMeter({
         aria-valuenow={taken}
         aria-valuemin={0}
         aria-valuemax={capacity}
-        aria-label={`${taken} of ${capacity} seats taken`}
+        aria-label={`${taken} of ${capacity} places taken`}
         className={cn(
           "relative w-full overflow-hidden rounded-full bg-muted",
           size === "sm" ? "h-1.5" : "h-2"

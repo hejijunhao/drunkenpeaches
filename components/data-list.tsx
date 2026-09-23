@@ -81,7 +81,7 @@ export function DataList<T>({
         {rows.map((row) => (
           <div
             key={rowKey(row)}
-            className="rounded-2xl border border-border bg-card p-4 shadow-soft"
+            className="rounded-lg border border-border bg-card p-4 shadow-soft"
           >
             <dl className="grid gap-2">
               {columns.map((c) => (

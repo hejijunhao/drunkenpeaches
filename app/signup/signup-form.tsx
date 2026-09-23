@@ -16,7 +16,7 @@ export function SignupForm() {
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="clubName">Club / chapter name</Label>
+        <Label htmlFor="clubName">Chapter name</Label>
         <Input
           id="clubName"
           name="clubName"
@@ -46,7 +46,7 @@ export function SignupForm() {
       </div>
       <FormError message={state.error} />
       <Button type="submit" className="w-full" loading={pending}>
-        {pending ? "Creating your club…" : "Create club"}
+        {pending ? "Establishing…" : "Establish chapter"}
       </Button>
     </form>
   );

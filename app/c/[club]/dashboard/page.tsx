@@ -3,10 +3,10 @@ import type { Metadata } from "next";
 import {
   CalendarDaysIcon,
   CalendarOffIcon,
-  ClipboardCheckIcon,
   MapPinIcon,
   PlusIcon,
   UsersIcon,
+  UtensilsIcon,
 } from "lucide-react";
 import { getClubContext } from "@/lib/club-context";
 import { createClient } from "@/lib/supabase/server";
@@ -99,23 +99,22 @@ export default async function DashboardPage({
   return (
     <div className="space-y-8">
       <PageHeader
-        title={`Hello, ${ctx.membership.full_name.split(" ")[0] || "there"}`}
-        description={ctx.club.name}
+        kicker={ctx.club.name}
+        title={ctx.membership.full_name.split(" ")[0] || "The notice board"}
+        description="Forthcoming luncheons and the list."
       >
         {ctx.isCommittee ? (
           <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
             <PlusIcon />
-            New lunch
+            Arrange a lunch
           </Button>
         ) : null}
       </PageHeader>
 
       {/* Next-lunch hero */}
       {next ? (
-        <Card className="gap-0 p-6 sm:p-8">
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Next lunch
-          </p>
+        <Card className="club-notice gap-0 p-5 sm:p-7">
+          <p className="club-kicker">Next luncheon</p>
           <div className="mt-3 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
@@ -147,7 +146,7 @@ export default async function DashboardPage({
                 variant={mySignup ? "outline" : "default"}
                 render={<Link href={`/c/${slug}/lunches/${next.id}`} />}
               >
-                {mySignup ? "View / manage my sign-up" : "View & sign up"}
+                {mySignup ? "View my place" : "Consult & add your name"}
               </Button>
             </div>
           </div>
@@ -155,17 +154,17 @@ export default async function DashboardPage({
       ) : (
         <EmptyState
           icon={CalendarOffIcon}
-          title="No upcoming lunches yet"
+          title="Nothing on the calendar"
           description={
             ctx.isCommittee
-              ? "Create the first lunch and release it to members when the booking is confirmed."
-              : "When the committee releases the next lunch, it'll appear here."
+              ? "Arrange the first lunch and release it once the restaurant is booked."
+              : "The next luncheon will appear here when the committee releases it."
           }
           action={
             ctx.isCommittee ? (
               <Button render={<Link href={`/c/${slug}/lunches/new`} />}>
                 <PlusIcon />
-                New lunch
+                Arrange a lunch
               </Button>
             ) : undefined
           }
@@ -175,7 +174,7 @@ export default async function DashboardPage({
       {/* Coming up */}
       {comingUp.length > 0 ? (
         <section className="space-y-3">
-          <h2 className="text-h2 text-foreground">Coming up</h2>
+          <h2 className="text-h2 text-foreground">Also forthcoming</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {comingUp.map((l) => {
               const s = signupsByLunch.get(l.id) ?? [];
@@ -203,15 +202,15 @@ export default async function DashboardPage({
           <Link href={`/c/${slug}/venues`} className="block">
             <Card hover className="p-5">
               <div className="flex items-center gap-4">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <ClipboardCheckIcon className="size-5" />
+                <div className="flex size-11 shrink-0 items-center justify-center border border-primary/20 bg-primary/8 text-primary">
+                  <UtensilsIcon className="size-5" />
                 </div>
                 <div>
-                  <p className="font-heading text-2xl leading-none font-medium">
+                  <p className="font-heading text-2xl leading-none">
                     {pipelineCount}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    venues in the pipeline
+                    venues under consideration
                   </p>
                 </div>
               </div>
@@ -220,15 +219,15 @@ export default async function DashboardPage({
           <Link href={`/c/${slug}/members`} className="block">
             <Card hover className="p-5">
               <div className="flex items-center gap-4">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <div className="flex size-11 shrink-0 items-center justify-center border border-primary/20 bg-primary/8 text-primary">
                   <UsersIcon className="size-5" />
                 </div>
                 <div>
-                  <p className="font-heading text-2xl leading-none font-medium">
+                  <p className="font-heading text-2xl leading-none">
                     {memberCount}
                   </p>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    active members
+                    members in good standing
                   </p>
                 </div>
               </div>

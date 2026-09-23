@@ -4,11 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import {
-  ChevronDownIcon,
+  CalendarDaysIcon,
+  HomeIcon,
   LogOutIcon,
-  MenuIcon,
+  SettingsIcon,
   UserIcon,
+  UsersIcon,
+  UtensilsIcon,
   WineIcon,
+  EllipsisIcon,
   XIcon,
 } from "lucide-react";
 
@@ -24,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { BrandMark } from "@/components/brand-mark";
 
 interface AppNavProps {
   clubSlug: string;
@@ -41,25 +46,39 @@ export function AppNav({
   isWineMaster,
 }: AppNavProps) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const signoutRef = useRef<HTMLFormElement>(null);
   const base = `/c/${clubSlug}`;
 
-  const links = [
-    { href: `${base}/dashboard`, label: "Dashboard" },
-    { href: `${base}/lunches`, label: "Lunches" },
-    { href: `${base}/members`, label: "Members" },
-    ...(isCommittee ? [{ href: `${base}/venues`, label: "Venues" }] : []),
-    ...(isCommittee || isWineMaster
-      ? [{ href: `${base}/wine`, label: "Wine" }]
+  const primary = [
+    { href: `${base}/dashboard`, label: "Home", icon: HomeIcon },
+    { href: `${base}/lunches`, label: "Lunches", icon: CalendarDaysIcon },
+    { href: `${base}/members`, label: "Members", icon: UsersIcon },
+  ];
+
+  const moreLinks = [
+    ...(isCommittee
+      ? [{ href: `${base}/venues`, label: "Venues", icon: UtensilsIcon }]
       : []),
-    ...(isCommittee ? [{ href: `${base}/settings`, label: "Settings" }] : []),
+    ...(isCommittee || isWineMaster
+      ? [{ href: `${base}/wine`, label: "Cellar", icon: WineIcon }]
+      : []),
+    ...(isCommittee
+      ? [{ href: `${base}/settings`, label: "Settings", icon: SettingsIcon }]
+      : []),
+    { href: `${base}/profile`, label: "My particulars", icon: UserIcon },
+  ];
+
+  const desktopLinks = [
+    ...primary,
+    ...moreLinks.filter((l) => l.href !== `${base}/profile`),
   ];
 
   const isActive = (href: string) => pathname.startsWith(href);
+  const moreActive = moreLinks.some((l) => isActive(l.href));
 
   const roleLabel = isWineMaster
-    ? "Committee · Wine master"
+    ? "Committee · Wine Master"
     : isCommittee
       ? "Committee"
       : "Member";
@@ -67,33 +86,29 @@ export function AppNav({
   const submitSignout = () => signoutRef.current?.requestSubmit();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/65">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex h-16 items-center justify-between gap-4">
-          {/* Club lockup */}
+    <>
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 md:h-16 md:px-6">
           <Link
             href={`${base}/dashboard`}
-            className="flex items-center gap-2 whitespace-nowrap"
+            className="flex min-w-0 items-center gap-2.5"
           >
-            <span className="text-lg" aria-hidden>
-              🍑
-            </span>
-            <span className="font-heading text-base font-medium tracking-tight">
+            <BrandMark size="sm" />
+            <span className="font-heading truncate text-base tracking-tight text-foreground md:text-lg">
               {clubName}
             </span>
           </Link>
 
-          {/* Desktop primary nav */}
-          <nav className="hidden items-center gap-1 md:flex">
-            {links.map((l) => (
+          <nav className="hidden items-center gap-0.5 md:flex" aria-label="Club">
+            {desktopLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
                 className={cn(
-                  "rounded-lg px-3 py-2 text-sm transition-colors duration-(--duration-micro)",
+                  "px-3 py-2 text-sm transition-colors duration-(--duration-micro)",
                   isActive(l.href)
-                    ? "bg-accent font-medium text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    ? "font-medium text-primary"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {l.label}
@@ -101,7 +116,6 @@ export function AppNav({
             ))}
           </nav>
 
-          {/* Desktop right cluster */}
           <div className="hidden items-center gap-1 md:flex">
             <ThemeToggle />
             <DropdownMenu>
@@ -118,22 +132,16 @@ export function AppNav({
                 <span className="max-w-32 truncate">
                   {memberName || "Account"}
                 </span>
-                <ChevronDownIcon className="size-4 text-muted-foreground" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-60">
                 <div className="px-2 py-1.5">
                   <p className="truncate text-sm font-medium">{memberName}</p>
-                  <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                    {isWineMaster ? (
-                      <WineIcon className="size-3 text-gold" />
-                    ) : null}
-                    {roleLabel}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{roleLabel}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem render={<Link href={`${base}/profile`} />}>
                   <UserIcon />
-                  My profile
+                  My particulars
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive" onClick={submitSignout}>
                   <LogOutIcon />
@@ -142,97 +150,103 @@ export function AppNav({
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          {/* Mobile menu toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            aria-label="Toggle menu"
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? (
-              <XIcon className="size-5" />
-            ) : (
-              <MenuIcon className="size-5" />
-            )}
-          </Button>
         </div>
+      </header>
 
-        {/* Mobile panel */}
-        {open ? (
-          <nav className="flex flex-col gap-1 pb-4 duration-(--duration-default) ease-(--ease-out-quint) animate-in fade-in-0 slide-in-from-top-2 md:hidden">
-            {links.map((l) => (
+      {/* Mobile bottom tabs */}
+      <nav
+        aria-label="Club"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:hidden"
+      >
+        <ul className="grid h-16 grid-cols-4">
+          {primary.map((l) => {
+            const active = isActive(l.href);
+            return (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  onClick={() => setMoreOpen(false)}
+                  className={cn(
+                    "flex h-full min-h-11 flex-col items-center justify-center gap-1 text-[0.6875rem] tracking-wide",
+                    active ? "text-primary" : "text-muted-foreground"
+                  )}
+                >
+                  <l.icon className="size-5" strokeWidth={active ? 2.1 : 1.6} />
+                  {l.label}
+                </Link>
+              </li>
+            );
+          })}
+          <li>
+            <button
+              type="button"
+              aria-expanded={moreOpen}
+              aria-label="More"
+              onClick={() => setMoreOpen((o) => !o)}
+              className={cn(
+                "flex h-full min-h-11 w-full flex-col items-center justify-center gap-1 text-[0.6875rem] tracking-wide",
+                moreOpen || moreActive ? "text-primary" : "text-muted-foreground"
+              )}
+            >
+              {moreOpen ? (
+                <XIcon className="size-5" strokeWidth={2.1} />
+              ) : (
+                <EllipsisIcon
+                  className="size-5"
+                  strokeWidth={moreActive ? 2.1 : 1.6}
+                />
+              )}
+              More
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      {moreOpen ? (
+        <div className="fixed inset-0 z-30 md:hidden">
+          <button
+            type="button"
+            aria-label="Dismiss"
+            className="absolute inset-0 bg-foreground/25"
+            onClick={() => setMoreOpen(false)}
+          />
+          <div className="absolute inset-x-0 bottom-16 space-y-1 border-t border-border bg-background px-4 pb-3 pt-3 shadow-lifted">
+            <p className="club-kicker px-1 pb-2">{roleLabel}</p>
+            {moreLinks.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
-                onClick={() => setOpen(false)}
+                onClick={() => setMoreOpen(false)}
                 className={cn(
-                  "rounded-lg px-3 py-3 text-sm transition-colors",
+                  "flex min-h-12 items-center gap-3 px-1 text-[0.95rem]",
                   isActive(l.href)
-                    ? "bg-accent font-medium text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                    ? "font-medium text-primary"
+                    : "text-foreground"
                 )}
               >
+                <l.icon className="size-4 text-muted-foreground" />
                 {l.label}
               </Link>
             ))}
-
-            <DropdownMenuSeparatorRow />
-
-            <Link
-              href={`${base}/profile`}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <Avatar size="sm">
-                <AvatarFallback className="bg-primary/10 text-xs font-medium text-primary">
-                  {initials(memberName)}
-                </AvatarFallback>
-              </Avatar>
-              <span className="flex flex-col">
-                <span className="font-medium text-foreground">
-                  {memberName}
-                </span>
-                <span className="flex items-center gap-1 text-xs">
-                  {isWineMaster ? (
-                    <WineIcon className="size-3 text-gold" />
-                  ) : null}
-                  {roleLabel}
-                </span>
-              </span>
-            </Link>
-
-            <div className="flex items-center justify-between rounded-lg px-3 py-2">
-              <span className="text-sm text-muted-foreground">Theme</span>
+            <div className="flex min-h-12 items-center justify-between px-1">
+              <span className="text-[0.95rem]">Appearance</span>
               <ThemeToggle />
             </div>
+            <button
+              type="button"
+              onClick={submitSignout}
+              className="flex min-h-12 w-full items-center gap-3 px-1 text-[0.95rem] text-destructive"
+            >
+              <LogOutIcon className="size-4" />
+              Sign out
+            </button>
+          </div>
+        </div>
+      ) : null}
 
-            <div className="px-3 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={submitSignout}
-              >
-                <LogOutIcon />
-                Sign out
-              </Button>
-            </div>
-          </nav>
-        ) : null}
-      </div>
-
-      {/* Sign-out POST form, submitted by the menu items above. */}
       <form ref={signoutRef} action="/auth/signout" method="post" hidden>
         <button type="submit" hidden aria-hidden tabIndex={-1} />
       </form>
-    </header>
+    </>
   );
-}
-
-/** Thin divider used inside the mobile panel. */
-function DropdownMenuSeparatorRow() {
-  return <div className="my-1 h-px bg-border" />;
 }

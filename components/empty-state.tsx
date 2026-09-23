@@ -13,8 +13,7 @@ interface EmptyStateProps {
 }
 
 /**
- * Consistent empty state — icon + headline + supporting copy + optional action.
- * Replaces the scattered `text-muted-foreground` / `border-dashed` one-offs.
+ * Quiet empty state — club notice, not a dashed startup illustration.
  */
 export function EmptyState({
   icon: Icon,
@@ -26,20 +25,18 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/40 px-6 py-12 text-center",
+        "flex flex-col items-start rounded-lg border border-border bg-card px-5 py-8 club-notice",
         className
       )}
     >
       {Icon ? (
-        <div className="mb-4 flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <Icon className="size-6" />
-        </div>
+        <Icon className="mb-3 size-5 text-muted-foreground" />
       ) : null}
-      <h3 className="font-heading text-base font-medium text-foreground">
+      <h3 className="font-heading text-lg font-medium text-foreground">
         {title}
       </h3>
       {description ? (
-        <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
+        <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-muted-foreground">
           {description}
         </p>
       ) : null}

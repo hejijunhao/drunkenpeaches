@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono, Newsreader, Source_Sans_3 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const sourceSans = Source_Sans_3({
+  variable: "--font-source-sans",
   subsets: ["latin"],
   display: "swap",
 });
@@ -16,15 +16,14 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-// Editorial display serif — used for page titles, heroes, marketing headlines.
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
   display: "swap",
 });
 
 const description =
-  "Modern lunch & member management for private dining clubs — sign-ups, waitlists, venues and wine, without the 2007 clunk.";
+  "The members' book for private dining clubs — luncheons, the list, the cellar. Invitation only.";
 
 export const metadata: Metadata = {
   title: {
@@ -36,6 +35,7 @@ export const metadata: Metadata = {
   keywords: [
     "dining club",
     "members club",
+    "private club",
     "lunch sign-ups",
     "waitlist",
     "wine",
@@ -53,6 +53,16 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f4efe4" },
+    { media: "(prefers-color-scheme: dark)", color: "#1c1614" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -62,9 +72,9 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${sourceSans.variable} ${geistMono.variable} ${newsreader.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="flex min-h-full flex-col bg-background text-foreground">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

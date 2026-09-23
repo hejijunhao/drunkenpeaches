@@ -57,9 +57,9 @@ export function SignupCard({
   const [confirmCancel, setConfirmCancel] = useState(false);
   const cancelFormRef = useRef<HTMLFormElement>(null);
 
-  useSuccessToast(signupPending, signupState.error, "You're signed up!");
+  useSuccessToast(signupPending, signupState.error, "Your name is on the list");
   useSuccessToast(guestPending, guestState.error, "Guests updated");
-  useSuccessToast(cancelPending, cancelState.error, "Your spot was cancelled");
+  useSuccessToast(cancelPending, cancelState.error, "Your place was withdrawn");
 
   if (cutoffPassed) {
     return (
@@ -67,10 +67,10 @@ export function SignupCard({
         <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
           <LockIcon className="mt-0.5 size-4 shrink-0 text-warning" />
           <p>
-            The sign-up cutoff has passed —{" "}
+            The list is closed —{" "}
             {mySignup
-              ? "your spot is locked in. Contact the committee if you can no longer make it."
-              : "contact the committee if you'd still like to attend."}
+              ? "your place is confirmed. Write to the committee if you can no longer attend."
+              : "write to the committee if you still wish to attend."}
             {mySignup ? (
               <span className="ml-2 inline-flex align-middle">
                 <StatusBadge status={mySignup.status} />
@@ -88,7 +88,7 @@ export function SignupCard({
       <Card className={confirmed ? "border-success/30" : "border-warning/30"}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            You&apos;re {confirmed ? "in" : "on the waitlist"}
+            {confirmed ? "Your name is on the list" : "You are on the waitlist"}
             <StatusBadge status={mySignup.status} />
           </CardTitle>
         </CardHeader>
@@ -165,16 +165,16 @@ export function SignupCard({
             loading={cancelPending}
             onClick={() => setConfirmCancel(true)}
           >
-            Cancel my spot
+            Withdraw my name
           </Button>
           <ConfirmDialog
             open={confirmCancel}
             onOpenChange={setConfirmCancel}
             destructive
-            title="Cancel your spot?"
-            description="If this lunch is full, the next person on the waitlist is promoted and emailed."
-            confirmLabel="Cancel my spot"
-            cancelLabel="Keep my spot"
+            title="Withdraw your name?"
+            description="If the table is full, the next member on the waitlist is offered the place and written to."
+            confirmLabel="Withdraw"
+            cancelLabel="Keep my place"
             onConfirm={() => {
               setConfirmCancel(false);
               cancelFormRef.current?.requestSubmit();
@@ -190,7 +190,7 @@ export function SignupCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign up</CardTitle>
+        <CardTitle>Add your name</CardTitle>
       </CardHeader>
       <CardContent>
         <form action={signupForm} className="space-y-4">
@@ -211,7 +211,7 @@ export function SignupCard({
                   onChange={(e) => setGuestCount(Number(e.target.value) || 0)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Guests use seats from the same booking.
+                  Guests occupy seats from the same booking.
                 </p>
               </div>
               {guestCount > 0 ? (
@@ -233,12 +233,12 @@ export function SignupCard({
             variant={willWaitlist ? "outline" : "default"}
             className="w-full sm:w-auto"
           >
-            {willWaitlist ? "Join the waitlist" : "Sign me up"}
+            {willWaitlist ? "Join the waitlist" : "Add my name"}
           </Button>
           {willWaitlist ? (
             <p className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning">
-              This lunch is full — you&apos;ll be auto-promoted (and emailed) if
-              a spot opens up.
+              The table is full. You will be offered a place (and written to)
+              should one become free.
             </p>
           ) : null}
         </form>

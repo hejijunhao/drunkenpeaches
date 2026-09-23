@@ -26,7 +26,7 @@ export function InviteForm({ slug }: { slug: string }) {
   const formRef = useRef<HTMLFormElement>(null);
   const submitted = useRef(false);
 
-  useSuccessToast(pending, state.error, "Invite sent");
+  useSuccessToast(pending, state.error, "Invitation sent");
 
   // Clear the form only after a real, successful submit.
   useEffect(() => {
@@ -39,7 +39,7 @@ export function InviteForm({ slug }: { slug: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Invite a member</CardTitle>
+        <CardTitle>Propose a member</CardTitle>
       </CardHeader>
       <CardContent>
         <form
@@ -69,15 +69,15 @@ export function InviteForm({ slug }: { slug: string }) {
           </div>
           <Button type="submit" loading={pending}>
             <UserPlusIcon />
-            Send invite
+            Send invitation
           </Button>
           <div className="sm:col-span-4">
             <FormError message={state.error} />
           </div>
         </form>
         <p className="mt-3 text-xs text-muted-foreground">
-          They&apos;ll get an email to set a password and complete their
-          profile. Membership is invitation-only.
+          They will receive a letter to set a password and complete their
+          particulars. Membership is by invitation only.
         </p>
       </CardContent>
     </Card>

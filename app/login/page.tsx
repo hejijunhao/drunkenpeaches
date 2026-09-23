@@ -4,7 +4,7 @@ import { AuthShell } from "@/components/auth-shell";
 import { FormError } from "@/components/form-error";
 import { LoginForm } from "./login-form";
 
-export const metadata: Metadata = { title: "Log in" };
+export const metadata: Metadata = { title: "Members' entrance" };
 
 export default async function LoginPage({
   searchParams,
@@ -15,8 +15,8 @@ export default async function LoginPage({
 
   return (
     <AuthShell
-      title="Welcome back"
-      description="Sign in to see your club's lunches."
+      title="Members' entrance"
+      description="Sign in to consult the book and the forthcoming luncheons."
       footer={
         <>
           <p>
@@ -24,16 +24,16 @@ export default async function LoginPage({
               href="/auth/forgot"
               className="text-foreground underline underline-offset-4 hover:text-primary"
             >
-              Forgot your password?
+              Forgotten your password?
             </Link>
           </p>
           <p>
-            Starting a new club?{" "}
+            Opening a new chapter?{" "}
             <Link
               href="/signup"
               className="text-foreground underline underline-offset-4 hover:text-primary"
             >
-              Create it here
+              Establish it here
             </Link>
             . Members join by committee invitation only.
           </p>

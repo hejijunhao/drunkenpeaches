@@ -16,11 +16,11 @@ export function AttendanceHistory({ items }: { items: AttendanceItem[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Attendance history</CardTitle>
+        <CardTitle>Attendance</CardTitle>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No lunch history yet.</p>
+          <p className="text-sm text-muted-foreground">No luncheons recorded.</p>
         ) : (
           <ul className="space-y-3">
             {items.map((h) => (

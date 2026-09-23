@@ -47,17 +47,16 @@ export function SetPasswordForm({ defaultName }: { defaultName: string }) {
         <Textarea
           id="dietary"
           name="dietary"
-          placeholder="e.g. no shellfish, vegetarian…"
+          placeholder="e.g. no shellfish; vegetarian"
           rows={3}
         />
         <p className="text-xs text-muted-foreground">
-          It&apos;s a dining club — the committee shares these with the
-          restaurant.
+          The committee shares these notes with the restaurant.
         </p>
       </div>
       <FormError message={state.error} />
       <Button type="submit" className="w-full" loading={pending}>
-        {pending ? "Saving…" : "Complete my profile"}
+        {pending ? "Saving…" : "Complete particulars"}
       </Button>
     </form>
   );

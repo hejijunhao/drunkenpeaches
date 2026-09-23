@@ -18,8 +18,9 @@ export default async function SettingsPage({
   return (
     <div className="space-y-8">
       <PageHeader
+        kicker="Committee"
         title="Club settings"
-        description="Identity, sign-up rules, and guest policy for your club."
+        description="Identity, the list, and guest policy for this chapter."
       />
       <SettingsForm slug={slug} club={ctx.club} />
     </div>
