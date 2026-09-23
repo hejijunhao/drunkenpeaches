@@ -20,7 +20,7 @@ export default async function SettingsPage({
       <PageHeader
         kicker="Committee"
         title="Club settings"
-        description="Identity, the list, and guest policy for this chapter."
+        description="Identity, the list windows, and guest policy for this chapter."
       />
       <SettingsForm slug={slug} club={ctx.club} />
     </div>

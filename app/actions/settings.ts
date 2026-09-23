@@ -10,6 +10,9 @@ const settingsSchema = z.object({
   guestsAllowed: z.boolean(),
   maxGuests: z.coerce.number().int().min(0).max(10),
   cutoffDays: z.coerce.number().int().min(0).max(30),
+  committeePriorityDays: z.coerce.number().int().min(0).max(60),
+  membersOnlyDays: z.coerce.number().int().min(0).max(90),
+  guestsPhaseDays: z.coerce.number().int().min(0).max(90),
 });
 
 export async function updateClubSettingsAction(
@@ -24,6 +27,9 @@ export async function updateClubSettingsAction(
       guestsAllowed: formData.get("guestsAllowed") === "on",
       maxGuests: formData.get("maxGuests"),
       cutoffDays: formData.get("cutoffDays"),
+      committeePriorityDays: formData.get("committeePriorityDays"),
+      membersOnlyDays: formData.get("membersOnlyDays"),
+      guestsPhaseDays: formData.get("guestsPhaseDays"),
     });
     if (!parsed.success) return { error: parsed.error.issues[0].message };
     const d = parsed.data;
@@ -34,6 +40,9 @@ export async function updateClubSettingsAction(
         guests_allowed: d.guestsAllowed,
         max_guests_per_member: d.maxGuests,
         signup_cutoff_days: d.cutoffDays,
+        committee_priority_days: d.committeePriorityDays,
+        members_only_days: d.membersOnlyDays,
+        guests_phase_days: d.guestsPhaseDays,
       })
       .eq("id", ctx.club.id);
     if (error) return { error: error.message };

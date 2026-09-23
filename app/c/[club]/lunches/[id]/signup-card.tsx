@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import Link from "next/link";
 import { LockIcon } from "lucide-react";
 import {
   signUpAction,
@@ -8,6 +9,7 @@ import {
   updateMyGuestsAction,
   type FormState,
 } from "@/app/actions/lunches";
+import type { SignupPhase } from "@/lib/signup-phases";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,11 +26,48 @@ interface SignupCardProps {
   maxGuests: number;
   seatsLeft: number;
   cutoffPassed: boolean;
+  phase: SignupPhase;
+  phaseTitle: string | null;
+  phaseDetail: string | null;
+  isCommittee: boolean;
+  isNextOpenLunch: boolean;
+  nextOpenHref?: string | null;
+  nextOpenTitle?: string | null;
   mySignup: {
     status: string;
     guest_count: number;
     guest_names: string | null;
   } | null;
+}
+
+function ClosedCard({
+  mySignup,
+  title,
+  detail,
+}: {
+  mySignup: SignupCardProps["mySignup"];
+  title: string;
+  detail: string;
+}) {
+  return (
+    <Card className="border-warning/30 bg-warning/5">
+      <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
+        <LockIcon className="mt-0.5 size-4 shrink-0 text-warning" />
+        <p>
+          <span className="font-medium text-foreground">{title}.</span> {detail}
+          {mySignup ? (
+            <>
+              {" "}
+              Your place is held.
+              <span className="ml-2 inline-flex align-middle">
+                <StatusBadge status={mySignup.status} />
+              </span>
+            </>
+          ) : null}
+        </p>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function SignupCard({
@@ -38,6 +77,13 @@ export function SignupCard({
   maxGuests,
   seatsLeft,
   cutoffPassed,
+  phase,
+  phaseTitle,
+  phaseDetail,
+  isCommittee,
+  isNextOpenLunch,
+  nextOpenHref,
+  nextOpenTitle,
   mySignup,
 }: SignupCardProps) {
   const [signupState, signupForm, signupPending] = useActionState<
@@ -61,24 +107,20 @@ export function SignupCard({
   useSuccessToast(guestPending, guestState.error, "Guests updated");
   useSuccessToast(cancelPending, cancelState.error, "Your place was withdrawn");
 
-  if (cutoffPassed) {
+  const guestsUi =
+    guestsAllowed && (phase === "guests" || isCommittee);
+
+  if (cutoffPassed || phase === "closed") {
     return (
-      <Card className="border-warning/30 bg-warning/5">
-        <CardContent className="flex items-start gap-3 py-5 text-sm text-muted-foreground">
-          <LockIcon className="mt-0.5 size-4 shrink-0 text-warning" />
-          <p>
-            The list is closed —{" "}
-            {mySignup
-              ? "your place is confirmed. Write to the committee if you can no longer attend."
-              : "write to the committee if you still wish to attend."}
-            {mySignup ? (
-              <span className="ml-2 inline-flex align-middle">
-                <StatusBadge status={mySignup.status} />
-              </span>
-            ) : null}
-          </p>
-        </CardContent>
-      </Card>
+      <ClosedCard
+        mySignup={mySignup}
+        title="The list is closed"
+        detail={
+          mySignup
+            ? "Write to the committee if you can no longer attend."
+            : "Write to the committee if you still wish to attend."
+        }
+      />
     );
   }
 
@@ -99,9 +141,11 @@ export function SignupCard({
               {mySignup.guest_count > 1 ? "s" : ""}
               {mySignup.guest_names ? ` — ${mySignup.guest_names}` : ""}.
             </p>
+          ) : guestsAllowed && phase === "members" && !isCommittee ? (
+            <p className="text-sm text-muted-foreground">{phaseDetail}</p>
           ) : null}
 
-          {guestsAllowed && !editingGuests ? (
+          {guestsUi && !editingGuests ? (
             <Button
               variant="outline"
               size="sm"
@@ -111,7 +155,7 @@ export function SignupCard({
             </Button>
           ) : null}
 
-          {guestsAllowed && editingGuests ? (
+          {guestsUi && editingGuests ? (
             <form
               action={guestForm}
               className="space-y-3 rounded-xl border border-border bg-muted/40 p-4"
@@ -185,21 +229,70 @@ export function SignupCard({
     );
   }
 
+  if (phase === "not_open" && !isCommittee) {
+    return (
+      <ClosedCard
+        mySignup={null}
+        title={phaseTitle ?? "The list is not yet open"}
+        detail={phaseDetail ?? "Sign-ups have not opened for this luncheon."}
+      />
+    );
+  }
+
+  if (!isCommittee && !isNextOpenLunch) {
+    return (
+      <Card className="border-border bg-muted/30">
+        <CardContent className="space-y-2 py-5 text-sm text-muted-foreground">
+          <p>
+            You may consult this luncheon, but names may be added only to the
+            next table that is currently open.
+          </p>
+          {nextOpenHref ? (
+            <p>
+              <Link
+                href={nextOpenHref}
+                className="text-foreground underline underline-offset-4 hover:text-primary"
+              >
+                {nextOpenTitle ?? "The next open luncheon"}
+              </Link>
+            </p>
+          ) : null}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (phase === "committee" && !isCommittee) {
+    return (
+      <ClosedCard
+        mySignup={null}
+        title={phaseTitle ?? "Committee priority"}
+        detail={
+          phaseDetail ??
+          "The committee has first claim on places. The list will open to the membership shortly."
+        }
+      />
+    );
+  }
+
   const willWaitlist = seatsLeft < 1 + guestCount;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Add your name</CardTitle>
+        {phaseDetail ? (
+          <p className="text-sm font-normal text-muted-foreground">
+            {phaseDetail}
+          </p>
+        ) : null}
       </CardHeader>
       <CardContent>
         <form action={signupForm} className="space-y-4">
-          {guestsAllowed ? (
+          {guestsUi ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="guestCount">
-                  Guests (max {maxGuests})
-                </Label>
+                <Label htmlFor="guestCount">Guests (max {maxGuests})</Label>
                 <Input
                   id="guestCount"
                   name="guestCount"
@@ -225,6 +318,10 @@ export function SignupCard({
                 </div>
               ) : null}
             </>
+          ) : guestsAllowed && phase === "members" ? (
+            <p className="text-xs text-muted-foreground">
+              Guest places open later. Add your own name first.
+            </p>
           ) : null}
           <FormError message={signupState.error} />
           <Button

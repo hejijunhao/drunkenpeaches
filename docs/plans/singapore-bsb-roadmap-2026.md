@@ -98,12 +98,12 @@ draft → released → completed | cancelled
   DEFINER functions.
 - Guests are `guest_count` + `guest_names` on the member’s signup
   row. They consume seats from the same X. Allowed when
-  `lunches.guests_allowed` (or club default) is true — **from the
-  moment of signup**, not as a later wave.
+  `lunches.guests_allowed` (or club default) is true **and**
+  `guests_open_at` has passed (three-phase windows; see Settings).
 - Cutoff: `lunches.signup_cutoff_at`. After it, members cannot sign
-  up or cancel. Computed on release from
-  `clubs.signup_cutoff_days` if unset
-  (`releaseLunchAction` in `app/actions/lunches.ts`).
+  up or cancel. Computed on create/release from club defaults if unset
+  (`releaseLunchAction` in `app/actions/lunches.ts`), together with
+  `signup_opens_at` / `members_open_at` / `guests_open_at`.
 - Committee overrides already exist: `committee_add_signup` (ignores
   cutoff; `p_force` can seat beyond capacity),
   `committee_remove_signup`, `set_lunch_capacity`, `setCutoffAction`,
@@ -112,8 +112,10 @@ draft → released → completed | cancelled
   (`app/c/[club]/dashboard/page.tsx`), lunches list + detail +
   `SignupCard`, committee control room on the same detail page.
 
-**There is no registration wave.** Release is a single switch that
-opens the lunch to every active member at once.
+Release still reveals the luncheon to every member. Sign-up itself
+is now three timed waves (committee → members → guests), configured
+on the club and overridable per lunch. Members may only add their
+name to the next luncheon that is currently in an open window.
 
 ### Venues
 

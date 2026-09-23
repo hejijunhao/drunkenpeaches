@@ -23,6 +23,12 @@ export interface Club {
   guests_allowed: boolean;
   max_guests_per_member: number;
   signup_cutoff_days: number;
+  /** Days after signup_opens_at before all members may sign up. */
+  committee_priority_days: number;
+  /** Days after members_open_at before guests may be added. */
+  members_only_days: number;
+  /** Days after guests_open_at until the existing signup cutoff. */
+  guests_phase_days: number;
   created_at: string;
 }
 
@@ -72,6 +78,9 @@ export interface Lunch {
   start_time: string;
   capacity: number;
   status: LunchStatus;
+  signup_opens_at: string | null;
+  members_open_at: string | null;
+  guests_open_at: string | null;
   signup_cutoff_at: string | null;
   guests_allowed: boolean | null;
   max_guests_per_member: number | null;

@@ -35,6 +35,7 @@ export default async function NewLunchPage({
       />
       <LunchForm
         slug={slug}
+        club={ctx.club}
         venues={(venues ?? []) as Pick<Venue, "id" | "name" | "status" | "default_capacity">[]}
       />
     </div>

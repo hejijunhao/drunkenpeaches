@@ -7,7 +7,11 @@ import {
   updateLunchAction,
   type FormState,
 } from "@/app/actions/lunches";
-import type { Lunch, Venue } from "@/lib/types";
+import type { Club, Lunch, Venue } from "@/lib/types";
+import {
+  computePhaseTimestamps,
+  toDatetimeLocalValue,
+} from "@/lib/signup-phases";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,13 +27,58 @@ import { FormError } from "@/components/form-error";
 
 interface LunchFormProps {
   slug: string;
+  club: Club;
   venues: Pick<Venue, "id" | "name" | "status" | "default_capacity">[];
   lunch?: Lunch;
 }
 
 const NO_VENUE = "__none__";
 
-export function LunchForm({ slug, venues, lunch }: LunchFormProps) {
+function phasesFromDate(club: Club, lunchDate: string, startTime: string) {
+  if (!lunchDate) {
+    return { opens: "", members: "", guests: "", cutoff: "" };
+  }
+  const p = computePhaseTimestamps({
+    lunchDate,
+    startTime: startTime || "12:30",
+    club,
+  });
+  return {
+    opens: toDatetimeLocalValue(p.signup_opens_at),
+    members: toDatetimeLocalValue(p.members_open_at),
+    guests: toDatetimeLocalValue(p.guests_open_at),
+    cutoff: toDatetimeLocalValue(p.signup_cutoff_at),
+  };
+}
+
+function phasesFromOpens(
+  club: Club,
+  lunchDate: string,
+  startTime: string,
+  opensLocal: string,
+  cutoffLocal: string
+) {
+  if (!lunchDate || !opensLocal) return null;
+  const opensIso = new Date(opensLocal);
+  if (Number.isNaN(opensIso.getTime())) return null;
+  const cutoffIso = cutoffLocal ? new Date(cutoffLocal) : null;
+  const p = computePhaseTimestamps({
+    lunchDate,
+    startTime: startTime || "12:30",
+    club,
+    signupOpensAt: opensIso.toISOString(),
+    cutoffAt:
+      cutoffIso && !Number.isNaN(cutoffIso.getTime())
+        ? cutoffIso.toISOString()
+        : null,
+  });
+  return {
+    members: toDatetimeLocalValue(p.members_open_at),
+    guests: toDatetimeLocalValue(p.guests_open_at),
+  };
+}
+
+export function LunchForm({ slug, club, venues, lunch }: LunchFormProps) {
   const action = lunch
     ? updateLunchAction.bind(null, slug, lunch.id)
     : createLunchAction.bind(null, slug);
@@ -50,9 +99,51 @@ export function LunchForm({ slug, venues, lunch }: LunchFormProps) {
   const [venueId, setVenueId] = useState(lunch?.venue_id ?? NO_VENUE);
   const selectedVenue = venues.find((v) => v.id === venueId);
 
-  const cutoffDefault = lunch?.signup_cutoff_at
-    ? new Date(lunch.signup_cutoff_at).toISOString().slice(0, 16)
-    : "";
+  const [lunchDate, setLunchDate] = useState(lunch?.lunch_date ?? "");
+  const [startTime, setStartTime] = useState(
+    lunch?.start_time?.slice(0, 5) ?? "12:30"
+  );
+
+  const initialPhases = lunch
+    ? {
+        opens: toDatetimeLocalValue(lunch.signup_opens_at),
+        members: toDatetimeLocalValue(lunch.members_open_at),
+        guests: toDatetimeLocalValue(lunch.guests_open_at),
+        cutoff: toDatetimeLocalValue(lunch.signup_cutoff_at),
+      }
+    : phasesFromDate(club, lunchDate, startTime);
+
+  const [opensAt, setOpensAt] = useState(initialPhases.opens);
+  const [membersOpenAt, setMembersOpenAt] = useState(initialPhases.members);
+  const [guestsOpenAt, setGuestsOpenAt] = useState(initialPhases.guests);
+  const [cutoffAt, setCutoffAt] = useState(initialPhases.cutoff);
+
+  function applyFromDate(nextDate: string, nextTime: string) {
+    const next = phasesFromDate(club, nextDate, nextTime);
+    setOpensAt(next.opens);
+    setMembersOpenAt(next.members);
+    setGuestsOpenAt(next.guests);
+    setCutoffAt(next.cutoff);
+  }
+
+  function onLunchDateChange(value: string) {
+    setLunchDate(value);
+    applyFromDate(value, startTime);
+  }
+
+  function onStartTimeChange(value: string) {
+    setStartTime(value);
+    applyFromDate(lunchDate, value);
+  }
+
+  function onOpensChange(value: string) {
+    setOpensAt(value);
+    const shifted = phasesFromOpens(club, lunchDate, startTime, value, cutoffAt);
+    if (shifted) {
+      setMembersOpenAt(shifted.members);
+      setGuestsOpenAt(shifted.guests);
+    }
+  }
 
   return (
     <form action={formAction} className="max-w-2xl space-y-6">
@@ -105,7 +196,8 @@ export function LunchForm({ slug, venues, lunch }: LunchFormProps) {
             id="lunchDate"
             name="lunchDate"
             type="date"
-            defaultValue={lunch?.lunch_date ?? ""}
+            value={lunchDate}
+            onChange={(e) => onLunchDateChange(e.target.value)}
             required
           />
         </div>
@@ -115,7 +207,8 @@ export function LunchForm({ slug, venues, lunch }: LunchFormProps) {
             id="startTime"
             name="startTime"
             type="time"
-            defaultValue={lunch?.start_time?.slice(0, 5) ?? "12:30"}
+            value={startTime}
+            onChange={(e) => onStartTimeChange(e.target.value)}
             required
           />
         </div>
@@ -146,18 +239,73 @@ export function LunchForm({ slug, venues, lunch }: LunchFormProps) {
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="cutoffAt">Sign-up cutoff (optional)</Label>
-        <Input
-          id="cutoffAt"
-          name="cutoffAt"
-          type="datetime-local"
-          defaultValue={cutoffDefault}
-        />
-        <p className="text-xs text-muted-foreground">
-          Leave blank to use the club default (set in Settings) when the lunch
-          is released. After the cutoff, sign-ups and cancellations lock.
-        </p>
+      <div className="space-y-3">
+        <div>
+          <Label>Sign-up windows</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Prefills from club defaults (committee{" "}
+            {club.committee_priority_days}d, members {club.members_only_days}d,
+            guests {club.guests_phase_days}d, cutoff {club.signup_cutoff_days}d
+            before the lunch). Changing the date or the open time recalculates
+            the later windows. You may override any field.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="signupOpensAt">Sign-ups open</Label>
+            <Input
+              id="signupOpensAt"
+              name="signupOpensAt"
+              type="datetime-local"
+              value={opensAt}
+              onChange={(e) => onOpensChange(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="membersOpenAt">Members open</Label>
+            <Input
+              id="membersOpenAt"
+              name="membersOpenAt"
+              type="datetime-local"
+              value={membersOpenAt}
+              onChange={(e) => setMembersOpenAt(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="guestsOpenAt">Guests open</Label>
+            <Input
+              id="guestsOpenAt"
+              name="guestsOpenAt"
+              type="datetime-local"
+              value={guestsOpenAt}
+              onChange={(e) => setGuestsOpenAt(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cutoffAt">Sign-up cutoff</Label>
+            <Input
+              id="cutoffAt"
+              name="cutoffAt"
+              type="datetime-local"
+              value={cutoffAt}
+              onChange={(e) => setCutoffAt(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={!lunchDate}
+            onClick={() => applyFromDate(lunchDate, startTime)}
+          >
+            Recalculate from date
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            After the cutoff, sign-ups and cancellations lock.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-2">

@@ -4,9 +4,36 @@ All notable changes to Drunken Peaches are recorded here. Newest first.
 
 ## Index
 
+- **[0.4.0](#040--2026-09-23)** — Configurable three-phase lunch sign-up windows (committee → members → guests), with a next-open-lunch rule for members.
 - **[0.3.0](#030--2026-09-23)** — Quiet-luxury members' club redesign: mobile-first shell, oxblood-on-paper tokens, club-secretary copy, peach emoji retired.
 - **[0.2.0](#020--2026-06-13)** — Front-end redesign: "editorial wine-cellar" design system, light + dark themes, new component library, and a full screen-by-screen UI overhaul.
 - **[0.1.0](#010--2026-06-13)** — Initial build: multi-tenant club lunch & member management (auth, members, venues, lunches, sign-ups/waitlist, wine, email, reminder cron).
+
+---
+
+## 0.4.0 — 2026-09-23
+
+Committee-configurable sign-up waves so a chapter can give the committee first
+claim on places, then the membership, then guests — without hiding forthcoming
+luncheons from anyone.
+
+- **Club settings:** the Sign-ups card now has committee-only, members, and
+  guests window lengths (defaults 2 / 14 / 14 days), counted forward from when
+  sign-ups open. The existing cutoff (days before the lunch) is unchanged.
+- **Per lunch:** `signup_opens_at`, `members_open_at`, and `guests_open_at`
+  sit alongside the existing cutoff. New and released lunches compute them from
+  club defaults; the lunch form can override any date.
+- **Visibility:** members still see every released forthcoming lunch. Only the
+  next luncheon that is currently in an open window accepts member sign-ups.
+  Committee may still add names by hand, as today.
+- **Phases:** before opens, the list is visible but closed (“Opens …”).
+  Between opens and members-open, only committee may add their own names.
+  Between members-open and guests-open, members may sign up without guests.
+  After guests-open, guests follow the existing guest policy. After cutoff,
+  the list locks as before.
+- **Enforcement:** `lib/signup-phases.ts` is shared by the UI and server
+  actions. `sign_up_for_lunch` and `update_my_guests` enforce the same rules
+  in Postgres so they cannot be bypassed from the client.
 
 ---
 
